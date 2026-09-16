@@ -1,10 +1,10 @@
 ---
-name: 'Astro Team'
-bio: 'The Astro Team builds tools and writes about the web platform, modern content, and the craft of making fast websites.'
+name: 'Jamie Ruane'
+bio: 'I am an ISE student'
 avatar: '../../assets/blog-placeholder-about.jpg'
 socialLinks:
   - label: 'Astro on GitHub'
-    url: 'https://github.com/withastro/astro'
+    url: 'https://www.youtube.com/watch?v=Tb32lRlSZEc'
   - label: 'Astro on Mastodon'
     url: 'https://m.webtoo.ls/@astro'
 ---
