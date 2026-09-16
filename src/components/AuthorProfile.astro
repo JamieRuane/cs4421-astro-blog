@@ -1,0 +1,67 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+type Props = CollectionEntry<'authors'>['data'];
+
+const { name, bio, avatar, socialLinks } = Astro.props;
+---
+
+<aside class="author-profile" aria-labelledby="author-heading">
+	<Image class="avatar" src={avatar} width={96} height={96} alt={`${name}'s avatar`} />
+	<div class="author-details">
+		<p class="eyebrow">Written by</p>
+		<h2 id="author-heading">{name}</h2>
+		<p>{bio}</p>
+		{socialLinks.length > 0 && (
+			<nav aria-label={`${name}'s social links`}>
+				{socialLinks.map((link) => (
+					<a href={link.url} target="_blank" rel="noreferrer">{link.label}</a>
+				))}
+			</nav>
+		)}
+	</div>
+</aside>
+
+<style>
+	.author-profile {
+		display: flex;
+		gap: 1.25rem;
+		align-items: flex-start;
+		margin-top: 3rem;
+		padding-top: 2rem;
+		border-top: 1px solid rgb(var(--gray-light));
+	}
+	.avatar {
+		flex: 0 0 auto;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+	.author-details h2 {
+		margin: 0.15rem 0 0.5rem;
+		color: rgb(var(--black));
+	}
+	.author-details p {
+		margin: 0 0 0.75rem;
+	}
+	.eyebrow {
+		color: rgb(var(--gray));
+		font-size: 0.85rem;
+		font-weight: bold;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem 1rem;
+	}
+	nav a {
+		color: rgb(var(--accent));
+	}
+	@media (max-width: 520px) {
+		.author-profile {
+			flex-direction: column;
+		}
+	}
+</style>
