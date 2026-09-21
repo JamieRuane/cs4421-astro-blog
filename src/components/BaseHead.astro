@@ -32,6 +32,18 @@ const { title, description, image = FallbackImage } = Astro.props;
 />
 <meta name="generator" content={Astro.generator} />
 
+<script is:inline>
+	const storedTheme = localStorage.getItem('theme');
+	const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+	const theme = storedTheme === 'light' || storedTheme === 'dark'
+		? storedTheme
+		: systemPrefersDark
+			? 'dark'
+			: 'light';
+
+	document.documentElement.dataset.theme = theme;
+</script>
+
 <Font cssVariable="--font-atkinson" preload />
 
 <!-- Canonical URL -->
