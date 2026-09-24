@@ -9,9 +9,10 @@ import Header from '../components/Header.astro';
 
 type Props = Omit<CollectionEntry<'blog'>['data'], 'author'> & {
 	author?: CollectionEntry<'authors'>['data'];
+	heroImageAlt?: string;
 };
 
-const { title, description, pubDate, updatedDate, heroImage, author } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, heroImageAlt, author } = Astro.props;
 ---
 
 <html lang="en">
@@ -63,7 +64,7 @@ const { title, description, pubDate, updatedDate, heroImage, author } = Astro.pr
 		<main>
 			<article>
 				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
+					{heroImage && <Image width={1020} height={510} src={heroImage} alt={heroImageAlt ?? ''} />}
 				</div>
 				<div class="prose">
 					<div class="title">

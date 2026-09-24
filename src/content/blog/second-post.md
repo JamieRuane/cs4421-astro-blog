@@ -1,21 +1,12 @@
 ---
-title: 'Second post'
-description: 'Tech'
-pubDate: 'Jul 15 2022'
-heroImage: '../../assets/blog-placeholder-4.jpg'
+title: 'Second post: Freddie'
+description: 'A little about Freddie, my two-year-old golden retriever.'
+pubDate: 'Sep 15 2026'
+heroImage: '../../assets/freddie.jpg'
+heroImageAlt: 'Freddie, my golden retriever, looking happily at the camera'
 author: 'astro-team'
 ---
 
-Technology has always been something that interests me because of how much it influences the world around us. From computers and smartphones to artificial intelligence and software, technology is constantly changing the way people live and work. I have always enjoyed understanding how things work and figuring out how different systems operate. This curiosity has encouraged me to learn more about computers, programming, and the technologies that are becoming increasingly important in modern society. I find it particularly interesting that something created from lines of code can become a program that millions of people use every day.
+Freddie is two years old now, although he still has the energy of a puppy whenever he realises it is time for a walk. He is happiest outside, especially when there is something new to sniff or a stick worth carrying home.
 
-One of the areas of technology that I have become particularly interested in is programming. Learning how to write code has given me a completely different understanding of computers. Instead of simply using software, I can begin to understand how it is created and how developers solve problems using code. I have been experimenting with languages such as C, Java, and Python, each of which has helped me understand different aspects of programming. Although learning a new language can sometimes be difficult, solving a problem after spending time working on it is extremely rewarding. Every small project gives me a better understanding of how software is developed.
-
-I am also interested in how computers work at a lower level. Learning about computer organisation, memory, processors, registers, and binary has shown me that there is much more happening inside a computer than what we see on the screen. Understanding these fundamentals makes programming more interesting because I can begin to see the connection between software and the hardware that actually executes it. Concepts such as how memory is organised and how information is represented digitally may seem complicated at first, but they provide an important foundation for understanding computer systems.
-
-Another area that I have become interested in is software development and the tools used by professional developers. Using Git and GitHub has shown me how programmers can manage projects, keep track of changes, and work on different versions of their code. I have also been learning about branches, commits, pull requests, and continuous integration. These tools demonstrate that programming is not simply about writing code; it also involves organisation, collaboration, testing, and maintaining projects over time. Building my own projects has made these concepts much easier to understand.
-
-I am particularly interested in the future of technology and the possibilities created by artificial intelligence. AI is developing rapidly and is already being used in areas such as software development, education, healthcare, finance, and entertainment. I find it fascinating that computers can now analyse huge amounts of information and perform tasks that previously required significant human effort. At the same time, I think understanding how these systems work is important as they become more common. Rather than simply using new technology, I want to understand how it is built and how it can be used effectively.
-
-Technology also appeals to me because there is always something new to learn. Programming languages, frameworks, operating systems, hardware, and development tools are constantly evolving. This means that becoming interested in technology is not something that has a clear endpoint. There are always new concepts to explore and new problems to solve. I enjoy the idea of continuously developing my skills and gradually taking on more complicated projects as my understanding improves.
-
-In the future, I would like to continue developing my knowledge of software engineering and computer science. I want to build projects that are useful rather than simply completing exercises, and I would like to gain experience working with larger systems and real-world technologies. Whether I eventually focus on software engineering, artificial intelligence, cybersecurity, or another area of computing, I know that technology will continue to be an important part of my interests. What attracts me most is the combination of creativity and problem-solving: taking an idea, breaking it into smaller problems, and eventually turning it into something that actually works.
+He loves playing, but food is probably his greatest passion. Freddie has a way of appearing in the kitchen at exactly the right moment, just in case I happen to drop something. Life with him is noisy, funny, and much better for the small routines we share.
