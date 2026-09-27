@@ -19,16 +19,20 @@ It has inline Astro-generated scripts and styles, so their SHA-256 hashes are
 explicitly allowlisted in `security-policy.json`. Do not replace these hashes
 with `unsafe-inline`, and do not add wildcard sources or `unsafe-eval`.
 
-After changing pages, scripts, styles, or Astro's generated output, run:
+After changing pages, scripts, styles, or Astro's generated output, regenerate
+the inline hashes from the current production build and validate them:
 
 ```sh
 npm run build
+npm run security:refresh-hashes
 npm run security:validate
 ```
 
-If validation reports new inline hashes, review the corresponding built blocks
-in `dist/` and update the `script-src` or `style-src` hash list only for code
-that is intended to run or apply. Stale hashes are also rejected. The
-validator checks the policy and generated build, but does not prove that a
-hosting provider is sending these headers; add a deployed-response check when
-the host is introduced.
+The explicit refresh command derives hashes only from inline `<script>` and
+`<style>` blocks in `dist/`. It refuses to update the policy if the build has
+inline style attributes, inline event handlers, disallowed resources, or
+another policy violation. Review the policy diff and generated blocks before
+committing. Normal `security:validate` is read-only and rejects missing or
+stale hashes. The validator checks the policy and generated build, but does
+not prove that a hosting provider is sending these headers; add a
+deployed-response check when the host is introduced.

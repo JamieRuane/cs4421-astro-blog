@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { access, readdir, readFile } from 'node:fs/promises';
+import { access, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -132,6 +132,12 @@ function checkCss(css, file, directives) {
 }
 
 async function main() {
+    const arguments_ = process.argv.slice(2);
+    const refreshHashes = arguments_.length === 1 && arguments_[0] === '--refresh-hashes';
+    if (arguments_.length > 0 && !refreshHashes) {
+        throw new Error('Usage: node scripts/validate-security-policy.mjs [--refresh-hashes]');
+    }
+
     let policy;
     try {
         policy = JSON.parse(await readFile(policyPath, 'utf8'));
@@ -208,6 +214,24 @@ async function main() {
     }
     for (const file of files.filter((path) => extname(path).toLowerCase() === '.css')) {
         checkCss(await readFile(file, 'utf8'), relative(buildRoot, file), directives);
+    }
+
+    if (refreshHashes) {
+        if (errors.length > 0) {
+            console.error('Security policy hash refresh refused:');
+            for (const error of errors) console.error(`- ${error}`);
+            process.exitCode = 1;
+            return;
+        }
+
+        for (const directive of ['script-src', 'style-src']) {
+            const nonHashSources = directives[directive].filter((source) => !source.startsWith("'sha256-"));
+            directives[directive] = [...nonHashSources, ...[...hashes[directive]].sort()];
+        }
+
+        await writeFile(policyPath, `${JSON.stringify(policy, null, 4)}\n`);
+        console.log(`Refreshed CSP hashes from ${htmlFiles.length} generated HTML files.`);
+        return;
     }
 
     for (const directive of ['script-src', 'style-src']) {

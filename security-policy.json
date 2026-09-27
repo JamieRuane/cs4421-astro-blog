@@ -24,8 +24,8 @@
             "style-src": [
                 "'self'",
                 "'sha256-Pl+cfsC6m/1gUV16ELm2rlQohjpSnB5bKkX0TrWEi8w='",
-                "'sha256-izg7CebMsepVNxN7SZqbJdLLeNVPBxYfR31su2xZGWU='",
-                "'sha256-YyujaHlTnq0ZivlOCJMwFkOxnQaie1f1kwiONrNXBbY='"
+                "'sha256-YyujaHlTnq0ZivlOCJMwFkOxnQaie1f1kwiONrNXBbY='",
+                "'sha256-izg7CebMsepVNxN7SZqbJdLLeNVPBxYfR31su2xZGWU='"
             ],
             "img-src": [
                 "'self'"
