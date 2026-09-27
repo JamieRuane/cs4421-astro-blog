@@ -1,0 +1,46 @@
+{
+    "headers": {
+        "Content-Security-Policy": {
+            "default-src": [
+                "'self'"
+            ],
+            "base-uri": [
+                "'self'"
+            ],
+            "object-src": [
+                "'none'"
+            ],
+            "frame-ancestors": [
+                "'none'"
+            ],
+            "form-action": [
+                "'self'"
+            ],
+            "script-src": [
+                "'self'",
+                "'sha256-GyGC2D09Xr7dBpbgXmgORprXHuQawT4KdVKzkxbeT78='",
+                "'sha256-sLyN81Jti51MF2GN1BZ186C2fTt7MN5xnAjq4AUw6IE='"
+            ],
+            "style-src": [
+                "'self'",
+                "'sha256-Pl+cfsC6m/1gUV16ELm2rlQohjpSnB5bKkX0TrWEi8w='",
+                "'sha256-YyujaHlTnq0ZivlOCJMwFkOxnQaie1f1kwiONrNXBbY='",
+                "'sha256-izg7CebMsepVNxN7SZqbJdLLeNVPBxYfR31su2xZGWU='"
+            ],
+            "img-src": [
+                "'self'"
+            ],
+            "font-src": [
+                "'self'"
+            ],
+            "connect-src": [
+                "'self'"
+            ]
+        },
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
+        "Strict-Transport-Security": "max-age=31536000"
+    }
+}

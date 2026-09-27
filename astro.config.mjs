@@ -8,6 +8,9 @@ import { defineConfig, fontProviders } from 'astro/config';
 export default defineConfig({
 	site: 'https://example.com',
 	integrations: [mdx(), sitemap()],
+	markdown: {
+		syntaxHighlight: 'prism',
+	},
 	fonts: [
 		{
 			provider: fontProviders.local(),

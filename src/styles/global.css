@@ -139,6 +139,129 @@ pre>code {
 	all: unset;
 }
 
+pre[class*='language-'],
+code[class*='language-'] {
+	color: #24292f;
+	background: transparent;
+	text-shadow: none;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #6e7781;
+	font-style: italic;
+}
+
+.token.punctuation {
+	color: #57606a;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #0550ae;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #116329;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+	color: #cf222e;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+	color: #8250df;
+}
+
+.token.function,
+.token.class-name {
+	color: #953800;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+	color: #9a6700;
+}
+
+[data-theme='dark'] pre[class*='language-'],
+[data-theme='dark'] code[class*='language-'] {
+	color: #e6edf3;
+}
+
+[data-theme='dark'] .token.comment,
+[data-theme='dark'] .token.prolog,
+[data-theme='dark'] .token.doctype,
+[data-theme='dark'] .token.cdata {
+	color: #8b949e;
+}
+
+[data-theme='dark'] .token.punctuation {
+	color: #c9d1d9;
+}
+
+[data-theme='dark'] .token.property,
+[data-theme='dark'] .token.tag,
+[data-theme='dark'] .token.boolean,
+[data-theme='dark'] .token.number,
+[data-theme='dark'] .token.constant,
+[data-theme='dark'] .token.symbol,
+[data-theme='dark'] .token.deleted {
+	color: #79c0ff;
+}
+
+[data-theme='dark'] .token.selector,
+[data-theme='dark'] .token.attr-name,
+[data-theme='dark'] .token.string,
+[data-theme='dark'] .token.char,
+[data-theme='dark'] .token.builtin,
+[data-theme='dark'] .token.inserted {
+	color: #7ee787;
+}
+
+[data-theme='dark'] .token.operator,
+[data-theme='dark'] .token.entity,
+[data-theme='dark'] .token.url,
+[data-theme='dark'] .language-css .token.string,
+[data-theme='dark'] .style .token.string {
+	color: #ff7b72;
+}
+
+[data-theme='dark'] .token.atrule,
+[data-theme='dark'] .token.attr-value,
+[data-theme='dark'] .token.keyword {
+	color: #d2a8ff;
+}
+
+[data-theme='dark'] .token.function,
+[data-theme='dark'] .token.class-name {
+	color: #ffa657;
+}
+
+[data-theme='dark'] .token.regex,
+[data-theme='dark'] .token.important,
+[data-theme='dark'] .token.variable {
+	color: #f2cc60;
+}
+
 blockquote {
 	border-left: 4px solid var(--accent);
 	padding: 0 0 0 20px;
