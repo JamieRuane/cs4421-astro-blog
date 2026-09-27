@@ -12,7 +12,8 @@
     "check": "astro check",
     "astro": "astro",
     "test:unit": "vitest run",
-    "lint": "eslint ."
+    "security:validate": "node scripts/validate-security-policy.mjs",
+    "lint": "eslint \"src/**/*.{js,ts}\""
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.1",
