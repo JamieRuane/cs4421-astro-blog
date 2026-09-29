@@ -19,11 +19,13 @@
             "script-src": [
                 "'self'",
                 "'sha256-GyGC2D09Xr7dBpbgXmgORprXHuQawT4KdVKzkxbeT78='",
+                "'sha256-W9oK9ywsZj3pPc++TT4p/roGrhwBOpuOLj61Jek0oLc='",
                 "'sha256-sLyN81Jti51MF2GN1BZ186C2fTt7MN5xnAjq4AUw6IE='"
             ],
             "style-src": [
                 "'self'",
                 "'sha256-Pl+cfsC6m/1gUV16ELm2rlQohjpSnB5bKkX0TrWEi8w='",
+                "'sha256-RAoeWQMdUkVnXMQcJWrA0yM1/RGHYvZFY0SE9z/kE/8='",
                 "'sha256-YyujaHlTnq0ZivlOCJMwFkOxnQaie1f1kwiONrNXBbY='",
                 "'sha256-izg7CebMsepVNxN7SZqbJdLLeNVPBxYfR31su2xZGWU='"
             ],
