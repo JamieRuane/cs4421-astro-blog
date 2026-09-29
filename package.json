@@ -21,6 +21,8 @@
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.3.2",
+    "aws-cdk-lib": "^2.271.0",
+    "constructs": "^10.8.1",
     "sharp": "^0.35.0"
   },
   "allowScripts": {
@@ -28,8 +30,10 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "aws-cdk": "^2.1143.0",
     "eslint": "^10.11.0",
     "eslint-plugin-astro": "^3.2.1",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vitest": "^5.0.1"
   }
