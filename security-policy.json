@@ -19,8 +19,8 @@
             "script-src": [
                 "'self'",
                 "'sha256-GyGC2D09Xr7dBpbgXmgORprXHuQawT4KdVKzkxbeT78='",
-                "'sha256-W9oK9ywsZj3pPc++TT4p/roGrhwBOpuOLj61Jek0oLc='",
-                "'sha256-sLyN81Jti51MF2GN1BZ186C2fTt7MN5xnAjq4AUw6IE='"
+                "'sha256-sLyN81Jti51MF2GN1BZ186C2fTt7MN5xnAjq4AUw6IE='",
+                "'sha256-xrNnszBngOdooEg1vbpns2rnNNLYqqGRoMIH/zw1ED8='"
             ],
             "style-src": [
                 "'self'",
