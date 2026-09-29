@@ -1,5 +1,5 @@
 <div class="game">
-	<div class="score">SCORE: 0000</div>
+	<div class="score">SCORE: 0000 | HIGH SCORE: 0000</div>
 
 	<div class="game-area">
 		<div class="player">
@@ -210,57 +210,94 @@
 	const player = document.querySelector('.player') as HTMLElement;
 	const obstacle = document.querySelector('.obstacle') as HTMLElement;
 	const scoreDisplay = document.querySelector('.score') as HTMLElement;
+	const gameOverScreen = document.querySelector('.game-over') as HTMLElement;
 
 	let isJumping = false;
+	let playerY = 10;
+	let playerVelocity = 0;
+
+	const gravity = 0.7;
+	const jumpStrength = 13;
+
 	let gameOver = false;
 	let score = 0;
+	let highScore = Number(localStorage.getItem('dinoHighScore')) || 0;
 	let obstaclePosition = 0;
-    let gameSpeed = 0.5;
+	let gameSpeed = 0.5;
+	let lastTime = 0;
 
 	function jump() {
 		if (isJumping || gameOver) return;
 
 		isJumping = true;
-		player.style.bottom = '100px';
+		playerVelocity = jumpStrength;
+	}
 
-		setTimeout(() => {
-			player.style.bottom = '10px';
+	function updatePlayer() {
+		if (!isJumping) return;
+
+		playerVelocity -= gravity;
+		playerY += playerVelocity;
+
+		if (playerY <= 10) {
+			playerY = 10;
+			playerVelocity = 0;
 			isJumping = false;
-		}, 500);
+		}
+
+		player.style.bottom = `${playerY}px`;
 	}
 
-	document.addEventListener('keydown', (event) => {
-	if (event.code !== 'Space') return;
+	window.addEventListener('keydown', (event) => {
+		if (event.code !== 'Space') return;
 
-	event.preventDefault();
+		event.preventDefault();
 
-	// Ignore repeated keydown events while Space is being held
-	if (event.repeat) return;
+		if (event.repeat) return;
 
-	if (gameOver) {
-		restartGame();
-	} else {
-		jump();
-	}
-});
+		if (gameOver) {
+			restartGame();
+		} else {
+			jump();
+		}
+	});
 
-	function moveObstacle() {
+	function moveObstacle(timestamp: number) {
 		if (gameOver) return;
 
-		obstaclePosition += gameSpeed;
+		if (lastTime === 0) {
+			lastTime = timestamp;
+		}
+
+		const deltaTime = timestamp - lastTime;
+		lastTime = timestamp;
+
+		obstaclePosition += gameSpeed * (deltaTime / 16.67);
 
 		if (obstaclePosition > 110) {
 			obstaclePosition = 0;
+
 			score++;
 
-gameSpeed = Math.min(1.5, 0.5 + score * 0.05);
+			if (score > highScore) {
+				highScore = score;
+				localStorage.setItem(
+					'dinoHighScore',
+					highScore.toString()
+				);
+			}
 
-scoreDisplay.textContent =
-	`SCORE: ${score.toString().padStart(4, '0')}`;
+			gameSpeed = Math.min(1.5, 0.5 + score * 0.05);
+
+			scoreDisplay.textContent =
+				`SCORE: ${score.toString().padStart(4, '0')} | HIGH SCORE: ${highScore
+					.toString()
+					.padStart(4, '0')}`;
 		}
 
 		obstacle.style.right = `${obstaclePosition}%`;
 
+		updatePlayer();
 		checkCollision();
 
 		requestAnimationFrame(moveObstacle);
@@ -282,29 +319,37 @@ scoreDisplay.textContent =
 	}
 
 	function endGame() {
-	gameOver = true;
+		gameOver = true;
+		gameOverScreen.style.display = 'flex';
+	}
 
-	const gameOverScreen = document.querySelector('.game-over') as HTMLElement;
+	function restartGame() {
+		gameOver = false;
+		isJumping = false;
+		score = 0;
+		playerY = 10;
+		playerVelocity = 0;
+		obstaclePosition = 0;
+		gameSpeed = 0.5;
+		lastTime = 0;
 
-	gameOverScreen.style.display = 'flex';
-}
-function restartGame() {
-	gameOver = false;
-	isJumping = false;
-	score = 0;
-	obstaclePosition = 0;
-    gameSpeed = 0.5;
+		player.style.bottom = '10px';
+		obstacle.style.right = '0%';
 
-	player.style.bottom = '10px';
-	obstacle.style.right = '0%';
+		gameOverScreen.style.display = 'none';
 
-	const gameOverScreen = document.querySelector('.game-over') as HTMLElement;
+		scoreDisplay.textContent =
+			`SCORE: 0000 | HIGH SCORE: ${highScore
+				.toString()
+				.padStart(4, '0')}`;
 
-	gameOverScreen.style.display = 'none';
+		requestAnimationFrame(moveObstacle);
+	}
 
-	scoreDisplay.textContent = 'SCORE: 0000';
+	scoreDisplay.textContent =
+		`SCORE: 0000 | HIGH SCORE: ${highScore
+			.toString()
+			.padStart(4, '0')}`;
 
-	moveObstacle();
-}
-	moveObstacle();
+	requestAnimationFrame(moveObstacle);
 </script>
