@@ -1,0 +1,310 @@
+<div class="game">
+	<div class="score">SCORE: 0000</div>
+
+	<div class="game-area">
+		<div class="player">
+	<div class="head"></div>
+	<div class="body"></div>
+	<div class="arm arm-left"></div>
+	<div class="arm arm-right"></div>
+	<div class="leg leg-left"></div>
+	<div class="leg leg-right"></div>
+</div>
+
+		<div class="obstacle">
+	<div class="cactus-body"></div>
+	<div class="cactus-arm cactus-arm-left"></div>
+	<div class="cactus-arm cactus-arm-right"></div>
+</div>
+
+		<div class="ground"></div>
+
+		<div class="game-over">
+			<h3>GAME OVER</h3>
+			<p>PRESS SPACE TO RESTART</p>
+		</div>
+	</div>
+
+	<p class="instructions">
+		PRESS SPACE TO JUMP
+	</p>
+</div>
+<style>
+	.game {
+		margin-top: 30px;
+		border: 1px solid currentColor;
+		padding: 20px;
+	}
+
+	.score {
+		text-align: right;
+		font-family: monospace;
+		font-size: 0.9rem;
+		margin-bottom: 10px;
+	}
+
+	.game-area {
+		position: relative;
+		height: 250px;
+		overflow: hidden;
+		border-bottom: 2px solid currentColor;
+	}
+
+	.player {
+	position: absolute;
+	bottom: 10px;
+	left: 80px;
+	width: 35px;
+	height: 55px;
+}
+
+.head {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	border: 2px solid currentColor;
+	border-radius: 50%;
+	top: 0;
+	left: 9px;
+}
+
+.body {
+	position: absolute;
+	width: 3px;
+	height: 25px;
+	background: currentColor;
+	top: 18px;
+	left: 16px;
+}
+
+.arm {
+	position: absolute;
+	width: 3px;
+	height: 18px;
+	background: currentColor;
+	top: 20px;
+}
+
+.arm-left {
+	left: 8px;
+	transform: rotate(35deg);
+}
+
+.arm-right {
+	left: 22px;
+	transform: rotate(-35deg);
+}
+
+.leg {
+	position: absolute;
+	width: 3px;
+	height: 18px;
+	background: currentColor;
+	top: 40px;
+}
+
+.leg-left {
+	left: 11px;
+	transform: rotate(25deg);
+}
+
+.leg-right {
+	left: 20px;
+	transform: rotate(-25deg);
+}
+
+	.obstacle {
+	position: absolute;
+	bottom: 10px;
+	right: 0;
+	width: 35px;
+	height: 55px;
+}
+
+.cactus-body {
+	position: absolute;
+	bottom: 0;
+	left: 14px;
+	width: 8px;
+	height: 50px;
+	border: 2px solid currentColor;
+	border-radius: 4px;
+}
+
+.cactus-arm {
+	position: absolute;
+	width: 10px;
+	height: 8px;
+	border: 2px solid currentColor;
+}
+
+.cactus-arm-left {
+	left: 3px;
+	top: 22px;
+	border-right: none;
+	border-radius: 5px 0 0 5px;
+}
+
+.cactus-arm-right {
+	right: 3px;
+	top: 12px;
+	border-left: none;
+	border-radius: 0 5px 5px 0;
+}
+@keyframes run {
+	0% {
+		transform: translateY(0);
+	}
+
+	50% {
+		transform: translateY(-2px);
+	}
+
+	100% {
+		transform: translateY(0);
+	}
+}
+
+.player {
+	animation: run 0.25s infinite alternate;
+}
+	.ground {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	border-bottom: 2px solid currentColor;
+}
+
+	.instructions {
+		text-align: center;
+		font-size: 0.8rem;
+		letter-spacing: 0.1em;
+		opacity: 0.6;
+		margin-top: 15px;
+	}
+    .game-over {
+	position: absolute;
+	inset: 0;
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.75);
+	text-align: center;
+}
+
+.game-over h3 {
+	margin: 0 0 10px;
+	font-size: 2rem;
+}
+
+.game-over p {
+	margin: 0;
+	font-size: 0.8rem;
+	letter-spacing: 0.1em;
+	opacity: 0.7;
+}
+</style>
+<script>
+	const player = document.querySelector('.player') as HTMLElement;
+	const obstacle = document.querySelector('.obstacle') as HTMLElement;
+	const scoreDisplay = document.querySelector('.score') as HTMLElement;
+
+	let isJumping = false;
+	let gameOver = false;
+	let score = 0;
+	let obstaclePosition = 0;
+    let gameSpeed = 0.5;
+
+	function jump() {
+		if (isJumping || gameOver) return;
+
+		isJumping = true;
+		player.style.bottom = '100px';
+
+		setTimeout(() => {
+			player.style.bottom = '10px';
+			isJumping = false;
+		}, 500);
+	}
+
+	document.addEventListener('keydown', (event) => {
+	if (event.code !== 'Space') return;
+
+	event.preventDefault();
+
+	// Ignore repeated keydown events while Space is being held
+	if (event.repeat) return;
+
+	if (gameOver) {
+		restartGame();
+	} else {
+		jump();
+	}
+});
+
+	function moveObstacle() {
+		if (gameOver) return;
+
+		obstaclePosition += gameSpeed;
+
+		if (obstaclePosition > 110) {
+			obstaclePosition = 0;
+			score++;
+
+gameSpeed = Math.min(1.5, 0.5 + score * 0.05);
+
+scoreDisplay.textContent =
+	`SCORE: ${score.toString().padStart(4, '0')}`;
+		}
+
+		obstacle.style.right = `${obstaclePosition}%`;
+
+		checkCollision();
+
+		requestAnimationFrame(moveObstacle);
+	}
+
+	function checkCollision() {
+		const playerRect = player.getBoundingClientRect();
+		const obstacleRect = obstacle.getBoundingClientRect();
+
+		const collision =
+			playerRect.left < obstacleRect.right &&
+			playerRect.right > obstacleRect.left &&
+			playerRect.top < obstacleRect.bottom &&
+			playerRect.bottom > obstacleRect.top;
+
+		if (collision) {
+			endGame();
+		}
+	}
+
+	function endGame() {
+	gameOver = true;
+
+	const gameOverScreen = document.querySelector('.game-over') as HTMLElement;
+
+	gameOverScreen.style.display = 'flex';
+}
+function restartGame() {
+	gameOver = false;
+	isJumping = false;
+	score = 0;
+	obstaclePosition = 0;
+    gameSpeed = 0.5;
+
+	player.style.bottom = '10px';
+	obstacle.style.right = '0%';
+
+	const gameOverScreen = document.querySelector('.game-over') as HTMLElement;
+
+	gameOverScreen.style.display = 'none';
+
+	scoreDisplay.textContent = 'SCORE: 0000';
+
+	moveObstacle();
+}
+	moveObstacle();
+</script>
