@@ -59,7 +59,10 @@ export class StaticSiteStack extends cdk.Stack {
 
             defaultRootObject: 'index.html',
         });
-
+        new cdk.CfnOutput(this, 'CloudFrontUrl', {
+            value: `https://${distribution.distributionDomainName}`,
+            description: 'CloudFront distribution URL used for post-deployment health checks',
+        });
         // Upload the Astro dist folder to S3
         new s3deploy.BucketDeployment(this, 'DeploySite', {
             sources: [s3deploy.Source.asset('./dist')],
