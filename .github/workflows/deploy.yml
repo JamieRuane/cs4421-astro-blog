@@ -34,3 +34,43 @@ jobs:
 
       - name: Deploy with AWS CDK
         run: npx cdk deploy StaticSiteStack --require-approval never
+
+      - name: Get CloudFront URL
+        id: cloudfront
+        run: |
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name StaticSiteStack \
+            --query "Stacks[0].Outputs[?OutputKey=='CloudFrontUrl'].OutputValue" \
+            --output text)
+
+          echo "CloudFront URL: $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Health check
+        env:
+          HEALTH_URL: ${{ steps.cloudfront.outputs.url }}/health.json
+        run: |
+          echo "Checking $HEALTH_URL"
+
+          for i in {1..10}; do
+            RESPONSE=$(curl --silent --show-error --fail "$HEALTH_URL") && break
+
+            echo "Health check attempt $i failed. Retrying..."
+            sleep 10
+          done
+
+          if [ -z "$RESPONSE" ]; then
+            echo "Health check failed"
+            exit 1
+          fi
+
+          echo "Response: $RESPONSE"
+
+          STATUS=$(echo "$RESPONSE" | jq -r '.status')
+
+          if [ "$STATUS" != "healthy" ]; then
+            echo "Health endpoint returned an unexpected status: $STATUS"
+            exit 1
+          fi
+
+          echo "Health check passed"
