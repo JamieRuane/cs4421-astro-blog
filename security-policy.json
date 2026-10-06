@@ -25,7 +25,6 @@
             "style-src": [
                 "'self'",
                 "'sha256-Pl+cfsC6m/1gUV16ELm2rlQohjpSnB5bKkX0TrWEi8w='",
-                "'sha256-RAoeWQMdUkVnXMQcJWrA0yM1/RGHYvZFY0SE9z/kE/8='",
                 "'sha256-YyujaHlTnq0ZivlOCJMwFkOxnQaie1f1kwiONrNXBbY='",
                 "'sha256-izg7CebMsepVNxN7SZqbJdLLeNVPBxYfR31su2xZGWU='"
             ],
