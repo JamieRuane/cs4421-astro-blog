@@ -28,11 +28,15 @@ npm run security:refresh-hashes
 npm run security:validate
 ```
 
-The explicit refresh command derives hashes only from inline `<script>` and
-`<style>` blocks in `dist/`. It refuses to update the policy if the build has
-inline style attributes, inline event handlers, disallowed resources, or
-another policy violation. Review the policy diff and generated blocks before
-committing. Normal `security:validate` is read-only and rejects missing or
-stale hashes. The validator checks the policy and generated build, but does
-not prove that a hosting provider is sending these headers; add a
-deployed-response check when the host is introduced.
+The application uses Astro's Node SSR output, so its build has no prerendered
+HTML files to scan. The validator starts the built server locally and requests
+the HTML routes discovered from `src/pages/` (including blog slugs from the
+content collection). It derives hashes from those production-rendered inline
+`<script>` and `<style>` blocks and still checks built CSS and HTML resources.
+It refuses to update the policy if the build has inline style attributes,
+inline event handlers, disallowed resources, or another policy violation.
+Review the policy diff and rendered pages before committing. Normal
+`security:validate` is read-only and rejects missing or stale hashes. The
+validator checks the policy and generated build, but does not prove that a
+hosting provider is sending these headers; add a deployed-response check when
+the host is introduced.

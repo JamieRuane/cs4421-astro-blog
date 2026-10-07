@@ -10,9 +10,23 @@ import Header from '../components/Header.astro';
 type Props = Omit<CollectionEntry<'blog'>['data'], 'author'> & {
 	author?: CollectionEntry<'authors'>['data'];
 	heroImageAlt?: string;
+	heroImageSrc?: string;
+	heroTitle?: string;
+	heroSubtitle?: string;
 };
 
-const { title, description, pubDate, updatedDate, heroImage, heroImageAlt, author } = Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	heroImageSrc,
+	heroImageAlt,
+	heroTitle,
+	heroSubtitle,
+	author,
+} = Astro.props;
 ---
 
 <html lang="en">
@@ -24,6 +38,11 @@ const { title, description, pubDate, updatedDate, heroImage, heroImageAlt, autho
 				max-width: 100%;
 				margin: 0;
 			}
+			main.main--hero {
+				width: 100%;
+				max-width: none;
+				padding: 0;
+			}
 			.hero-image {
 				width: 100%;
 			}
@@ -33,12 +52,60 @@ const { title, description, pubDate, updatedDate, heroImage, heroImageAlt, autho
 				border-radius: 12px;
 				box-shadow: var(--box-shadow);
 			}
+			.hero-image--banner {
+				position: relative;
+				overflow: hidden;
+				background: #19212c;
+			}
+			.hero-image--banner img {
+				width: 100%;
+				height: clamp(300px, 43vw, 520px);
+				object-fit: cover;
+				object-position: center 48%;
+				border-radius: 0;
+				box-shadow: none;
+			}
+			.hero-image--banner::after {
+				position: absolute;
+				inset: 0;
+				content: '';
+				background: linear-gradient(90deg, rgba(8, 13, 20, 0.7), rgba(8, 13, 20, 0.08) 90%),
+					linear-gradient(0deg, rgba(8, 13, 20, 0.32), transparent 55%);
+				pointer-events: none;
+			}
+			.hero-copy {
+				position: absolute;
+				z-index: 1;
+				inset: 0;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				width: min(100% - 3rem, 980px);
+				margin-inline: auto;
+				color: #fff;
+				text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+			}
+			.hero-copy h1 {
+				margin: 0 0 0.5rem;
+				font-size: clamp(3rem, 8vw, 6rem);
+				line-height: 1;
+				color: #fff;
+			}
+			.hero-copy p {
+				max-width: 38rem;
+				margin: 0;
+				font-size: clamp(1rem, 2.4vw, 1.35rem);
+				line-height: 1.5;
+			}
 			.prose {
 				width: 720px;
 				max-width: calc(100% - 2em);
 				margin: auto;
 				padding: 1em;
 				color: rgb(var(--gray-dark));
+			}
+			.main--hero .prose {
+				padding-top: 2em;
 			}
 			.title {
 				margin-bottom: 1em;
@@ -56,31 +123,51 @@ const { title, description, pubDate, updatedDate, heroImage, heroImageAlt, autho
 			.last-updated-on {
 				font-style: italic;
 			}
+			@media (max-width: 600px) {
+				.hero-image--banner img {
+					height: 360px;
+					object-position: 54% center;
+				}
+				.hero-copy {
+					width: calc(100% - 2.5rem);
+				}
+			}
 		</style>
 	</head>
 
 	<body>
 		<Header />
-		<main>
+		<main class={heroTitle ? 'main--hero' : undefined}>
 			<article>
-				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt={heroImageAlt ?? ''} />}
+				<div class:list={['hero-image', { 'hero-image--banner': heroTitle }]}>
+					{
+						heroImageSrc ? (
+							<img src={heroImageSrc} alt={heroImageAlt ?? ''} fetchpriority="high" />
+						) : (
+							heroImage && <Image width={1020} height={510} src={heroImage} alt={heroImageAlt ?? ''} />
+						)
+					}
+					{heroTitle && <div class="hero-copy"><h1>{heroTitle}</h1><p>{heroSubtitle}</p></div>}
 				</div>
 				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
-									</div>
-								)
-							}
-						</div>
-						<h1>{title}</h1>
-						<hr />
-					</div>
+					{
+						!heroTitle && (
+							<div class="title">
+								<div class="date">
+									<FormattedDate date={pubDate} />
+									{
+										updatedDate && (
+											<div class="last-updated-on">
+												Last updated on <FormattedDate date={updatedDate} />
+											</div>
+										)
+									}
+								</div>
+								<h1>{title}</h1>
+								<hr />
+							</div>
+						)
+					}
 					<slot />
 					{author && <AuthorProfile {...author} />}
 				</div>
