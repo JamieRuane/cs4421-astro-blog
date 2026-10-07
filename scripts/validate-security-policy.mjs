@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
+import { spawn } from 'node:child_process';
 import { access, readdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, extname, join, relative } from 'node:path';
+import net from 'node:net';
+import { dirname, extname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -21,6 +23,117 @@ async function listFiles(directory) {
         }),
     );
     return nestedFiles.flat();
+}
+
+async function getHtmlRoutes() {
+    const pagesRoot = join(projectRoot, 'src', 'pages');
+    const pageFiles = (await listFiles(pagesRoot)).filter((file) => extname(file).toLowerCase() === '.astro');
+    const routes = [];
+
+    for (const file of pageFiles) {
+        const segments = relative(pagesRoot, file).split(sep);
+        segments[segments.length - 1] = segments.at(-1).replace(/\.astro$/i, '');
+        if (segments.at(-1) === 'index') segments.pop();
+
+        const dynamicIndex = segments.findIndex((segment) => /^\[.*\]$/.test(segment));
+        if (dynamicIndex === -1) {
+            routes.push(`/${segments.join('/')}`);
+            continue;
+        }
+
+        const dynamicSegment = segments[dynamicIndex];
+        if (dynamicSegment !== '[...slug]') {
+            throw new Error(`Cannot discover SSR route for dynamic page ${relative(projectRoot, file)}`);
+        }
+
+        const blogRoot = join(projectRoot, 'src', 'content', 'blog');
+        const posts = (await listFiles(blogRoot)).filter((post) => /\.(?:md|mdx)$/i.test(post));
+        if (posts.length === 0) {
+            throw new Error(`No blog posts found for dynamic SSR route ${relative(projectRoot, file)}`);
+        }
+
+        for (const post of posts) {
+            const slug = relative(blogRoot, post).replace(/\.(?:md|mdx)$/i, '').split(sep).join('/');
+            routes.push(`/${[...segments.slice(0, dynamicIndex), slug].join('/')}`);
+        }
+    }
+
+    return [...new Set(routes)].sort();
+}
+
+async function getAvailablePort() {
+    const server = net.createServer();
+    await new Promise((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(0, '127.0.0.1', resolve);
+    });
+    const { port } = server.address();
+    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+    return port;
+}
+
+async function renderSsrHtml(routes) {
+    const serverEntry = join(buildRoot, 'server', 'entry.mjs');
+    if (!(await access(serverEntry).then(() => true).catch(() => false))) {
+        return [];
+    }
+
+    const port = await getAvailablePort();
+    const child = spawn(process.execPath, [serverEntry], {
+        cwd: projectRoot,
+        env: { ...process.env, HOST: '127.0.0.1', PORT: String(port) },
+        stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let serverOutput = '';
+    child.stdout.setEncoding('utf8').on('data', (chunk) => { serverOutput += chunk; });
+    child.stderr.setEncoding('utf8').on('data', (chunk) => { serverOutput += chunk; });
+
+    const baseUrl = `http://127.0.0.1:${port}`;
+    try {
+        const startupDeadline = Date.now() + 30_000;
+        let ready = false;
+        while (Date.now() < startupDeadline) {
+            if (child.exitCode !== null) {
+                throw new Error(`Built Astro server exited before it was ready:\n${serverOutput}`);
+            }
+            try {
+                const response = await fetch(baseUrl, { signal: AbortSignal.timeout(2_000) });
+                if (response.ok) {
+                    await response.arrayBuffer();
+                    ready = true;
+                    break;
+                }
+            } catch {
+                await new Promise((resolve) => setTimeout(resolve, 200));
+            }
+        }
+        if (!ready) throw new Error(`Built Astro server did not become ready:\n${serverOutput}`);
+
+        const documents = [];
+        for (const route of routes) {
+            const response = await fetch(new URL(route, baseUrl), { signal: AbortSignal.timeout(10_000) });
+            const html = await response.text();
+            if (!response.ok) {
+                throw new Error(
+                    `Built Astro server returned ${response.status} for ${route}: ${html.slice(0, 500)}\n${serverOutput}`,
+                );
+            }
+            const contentType = response.headers.get('content-type') ?? '';
+            if (!contentType.includes('text/html')) {
+                throw new Error(`Built Astro server returned non-HTML content for ${route}: ${contentType}`);
+            }
+            documents.push({ file: `SSR${route}`, html });
+        }
+        return documents;
+    } finally {
+        if (child.exitCode === null) {
+            child.kill();
+            await Promise.race([
+                new Promise((resolve) => child.once('exit', resolve)),
+                new Promise((resolve) => setTimeout(resolve, 2_000)),
+            ]);
+        }
+    }
 }
 
 function hashSource(content) {
@@ -205,12 +318,21 @@ async function main() {
     }
     const files = await listFiles(buildRoot);
     const htmlFiles = files.filter((file) => extname(file).toLowerCase() === '.html');
-    if (htmlFiles.length === 0) fail('dist/ contains no generated HTML files');
+    const htmlDocuments = [];
+    for (const file of htmlFiles) {
+        htmlDocuments.push({ file: relative(buildRoot, file), html: await readFile(file, 'utf8') });
+    }
+
+    if (await access(join(buildRoot, 'server', 'entry.mjs')).then(() => true).catch(() => false)) {
+        const routes = await getHtmlRoutes();
+        htmlDocuments.push(...await renderSsrHtml(routes));
+    } else if (htmlDocuments.length === 0) {
+        fail('dist/ contains no generated HTML files or SSR server entry');
+    }
 
     const hashes = { 'script-src': new Set(), 'style-src': new Set() };
-    for (const file of htmlFiles) {
-        const html = await readFile(file, 'utf8');
-        checkHtml(html, relative(buildRoot, file), directives, hashes);
+    for (const { file, html } of htmlDocuments) {
+        checkHtml(html, file, directives, hashes);
     }
     for (const file of files.filter((path) => extname(path).toLowerCase() === '.css')) {
         checkCss(await readFile(file, 'utf8'), relative(buildRoot, file), directives);
@@ -230,7 +352,7 @@ async function main() {
         }
 
         await writeFile(policyPath, `${JSON.stringify(policy, null, 4)}\n`);
-        console.log(`Refreshed CSP hashes from ${htmlFiles.length} generated HTML files.`);
+        console.log(`Refreshed CSP hashes from ${htmlDocuments.length} generated HTML documents.`);
         return;
     }
 
@@ -258,7 +380,7 @@ async function main() {
         return;
     }
 
-    console.log(`Security policy validated against ${htmlFiles.length} generated HTML files.`);
+    console.log(`Security policy validated against ${htmlDocuments.length} generated HTML documents.`);
 }
 
 main().catch((error) => {

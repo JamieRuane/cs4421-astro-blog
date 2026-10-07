@@ -19,6 +19,8 @@
             "script-src": [
                 "'self'",
                 "'sha256-GyGC2D09Xr7dBpbgXmgORprXHuQawT4KdVKzkxbeT78='",
+                "'sha256-LhzmIbEDrBoSP57CCu6R63gU0KZyUluKrICLjlxTxZ4='",
+                "'sha256-QlJlZOFihNHOgxHCu8LFOfaIDOmE8KPj3BCZOGQe7gU='",
                 "'sha256-sLyN81Jti51MF2GN1BZ186C2fTt7MN5xnAjq4AUw6IE='",
                 "'sha256-xrNnszBngOdooEg1vbpns2rnNNLYqqGRoMIH/zw1ED8='"
             ],
@@ -27,7 +29,7 @@
                 "'sha256-Pl+cfsC6m/1gUV16ELm2rlQohjpSnB5bKkX0TrWEi8w='",
                 "'sha256-RAoeWQMdUkVnXMQcJWrA0yM1/RGHYvZFY0SE9z/kE/8='",
                 "'sha256-YyujaHlTnq0ZivlOCJMwFkOxnQaie1f1kwiONrNXBbY='",
-                "'sha256-izg7CebMsepVNxN7SZqbJdLLeNVPBxYfR31su2xZGWU='"
+                "'sha256-sfUey2lfTXEOI+Gk2ln1vQ1UUbP6vl9lcTZBFH5MRHQ='"
             ],
             "img-src": [
                 "'self'"
