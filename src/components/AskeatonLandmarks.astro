@@ -1,0 +1,575 @@
+---
+const landmarks = [
+	{
+		id: 'church',
+		name: "St. Mary's Catholic Church",
+		src: '/images/askeaton/church.jpg',
+		alt: "St. Mary's Catholic Church in Askeaton",
+		description:
+			"St. Mary's Catholic Church is a familiar part of Askeaton's town centre and an important place in the life of the local community.",
+	},
+	{
+		id: 'abbey',
+		name: 'Askeaton Abbey',
+		src: '/images/askeaton/abbey.jpg',
+		alt: 'Askeaton Abbey, County Limerick',
+		description:
+			'The historic Franciscan abbey is known for its impressive stone remains and its long connection to Askeaton.',
+	},
+	{
+		id: 'castle',
+		name: 'Askeaton Castle',
+		src: '/images/askeaton/castle.jpg',
+		alt: 'Askeaton Castle overlooking the town',
+		description:
+			'Askeaton Castle is a striking medieval landmark overlooking the town and one of the best-known reminders of its history.',
+	},
+	{
+		id: 'pool',
+		name: 'Askeaton Pool & Leisure',
+		src: '/images/askeaton/pool.jpg',
+		alt: 'Askeaton Pool & Leisure',
+		description:
+			'Askeaton Pool & Leisure is a modern community hub for swimming, sport and activities for people of all ages.',
+	},
+];
+---
+
+<section class="landmarks" aria-labelledby="landmarks-heading" data-landmarks>
+	<div class="section-heading">
+		<p class="eyebrow">THE PLACES THAT MAKE IT HOME</p>
+		<h2 id="landmarks-heading">A few Askeaton landmarks</h2>
+		<p>Scroll through the wheel, then open a landmark to take a closer look.</p>
+	</div>
+
+	<div class="carousel-shell">
+		<div
+			class="carousel-track"
+			data-carousel-track
+			role="region"
+			aria-label="Askeaton landmarks"
+			aria-roledescription="carousel"
+			tabindex="0"
+		>
+			{landmarks.map((landmark, index) => (
+				<button
+					class="landmark-card"
+					type="button"
+					data-landmark-card
+					data-index={index}
+					data-name={landmark.name}
+					data-src={landmark.src}
+					data-alt={landmark.alt}
+					data-description={landmark.description}
+					aria-label={`Open ${landmark.name} details`}
+					aria-current={index === 0 ? 'true' : 'false'}
+					aria-roledescription="slide"
+				>
+					<img
+						src={landmark.src}
+						alt={landmark.alt}
+						loading={index === 0 ? 'eager' : 'lazy'}
+						draggable="false"
+					/>
+					<span class="card-shade"></span>
+					<span class="card-caption">
+						<span class="card-name">{landmark.name}</span>
+						<span class="card-action">Open story <span aria-hidden="true">↗</span></span>
+					</span>
+				</button>
+			))}
+		</div>
+
+		<div class="carousel-controls">
+			<p data-selected-label aria-live="polite">Selected: {landmarks[0].name}</p>
+			<div class="control-buttons">
+				<button type="button" data-previous aria-label="Previous landmark">←</button>
+				<button type="button" data-next aria-label="Next landmark">→</button>
+			</div>
+		</div>
+	</div>
+
+	<dialog class="landmark-dialog" data-landmark-dialog aria-labelledby="dialog-title">
+		<button class="dialog-close" type="button" data-close-dialog aria-label="Close landmark details">×</button>
+		<img data-dialog-image alt="" />
+		<div class="dialog-copy">
+			<p class="eyebrow">ASKEATON, CO. LIMERICK</p>
+			<h2 id="dialog-title" data-dialog-title></h2>
+			<p data-dialog-description></p>
+		</div>
+	</dialog>
+</section>
+
+<script>
+	const root = document.querySelector<HTMLElement>('[data-landmarks]');
+	if (!root) {
+		throw new Error('Askeaton landmarks carousel was not found');
+	}
+
+	const track = root.querySelector<HTMLDivElement>('[data-carousel-track]');
+	const cards = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-landmark-card]'));
+	const label = root.querySelector<HTMLElement>('[data-selected-label]');
+	const previous = root.querySelector<HTMLButtonElement>('[data-previous]');
+	const next = root.querySelector<HTMLButtonElement>('[data-next]');
+	const dialog = root.querySelector<HTMLDialogElement>('[data-landmark-dialog]');
+	const closeButton = root.querySelector<HTMLButtonElement>('[data-close-dialog]');
+	const dialogImage = root.querySelector<HTMLImageElement>('[data-dialog-image]');
+	const dialogTitle = root.querySelector<HTMLElement>('[data-dialog-title]');
+	const dialogDescription = root.querySelector<HTMLElement>('[data-dialog-description]');
+
+	if (!track || !label || !previous || !next || !dialog || !closeButton || !dialogImage ||
+		!dialogTitle || !dialogDescription) {
+		throw new Error('Askeaton landmarks carousel is missing required controls');
+	}
+
+	const carouselTrack = track;
+	const selectedLabel = label;
+	const previousButton = previous;
+	const nextButton = next;
+	const landmarkDialog = dialog;
+	const dialogCloseButton = closeButton;
+	const landmarkDialogImage = dialogImage;
+	const landmarkDialogTitle = dialogTitle;
+	const landmarkDialogDescription = dialogDescription;
+	type DragStart = { x: number; scrollLeft: number };
+	let selectedIndex = 0;
+	let opener: HTMLButtonElement | null = null;
+	let dragStart: DragStart | null = null;
+	let wasDragged = false;
+	let scrollFrame = 0;
+
+	function positionCards() {
+		cards.forEach((card, index) => {
+			let offset = index - selectedIndex;
+			if (offset > cards.length / 2) {
+				offset -= cards.length;
+			} else if (offset < -cards.length / 2) {
+				offset += cards.length;
+			}
+			card.dataset.position = offset === 0 ? 'center' : offset === -1 ? 'left' : offset === 1 ? 'right' : 'far';
+			card.setAttribute('aria-current', String(offset === 0));
+		});
+	}
+
+	function selectCard(index: number, shouldScroll = true) {
+		selectedIndex = (index + cards.length) % cards.length;
+		const card = cards[selectedIndex];
+		if (!card) {
+			return;
+		}
+		selectedLabel.textContent = `Selected: ${card.dataset.name ?? 'Askeaton landmark'}`;
+		positionCards();
+		if (shouldScroll) {
+			carouselTrack.scrollTo({
+				left: card.offsetLeft - (carouselTrack.clientWidth - card.offsetWidth) / 2,
+				behavior: 'smooth',
+			});
+		}
+	}
+
+	function openCard(card: HTMLButtonElement) {
+		selectCard(Number(card.dataset.index));
+		opener = card;
+		landmarkDialogImage.src = card.dataset.src ?? '';
+		landmarkDialogImage.alt = card.dataset.alt ?? '';
+		landmarkDialogTitle.textContent = card.dataset.name ?? '';
+		landmarkDialogDescription.textContent = card.dataset.description ?? '';
+		landmarkDialog.showModal();
+		dialogCloseButton.focus();
+	}
+
+	cards.forEach((card) => {
+		card.addEventListener('click', () => {
+			if (wasDragged) {
+				wasDragged = false;
+				return;
+			}
+			openCard(card);
+		});
+	});
+
+	previousButton.addEventListener('click', () => selectCard(selectedIndex - 1));
+	nextButton.addEventListener('click', () => selectCard(selectedIndex + 1));
+
+	carouselTrack.addEventListener('keydown', (event) => {
+		if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+			event.preventDefault();
+			selectCard(selectedIndex + (event.key === 'ArrowRight' ? 1 : -1));
+			cards[selectedIndex]?.focus();
+		}
+	});
+
+	carouselTrack.addEventListener('scroll', () => {
+		cancelAnimationFrame(scrollFrame);
+		scrollFrame = requestAnimationFrame(() => {
+			const trackCenter = carouselTrack.getBoundingClientRect().left + carouselTrack.clientWidth / 2;
+			let nearestIndex = selectedIndex;
+			let nearestDistance = Number.POSITIVE_INFINITY;
+			cards.forEach((card, index) => {
+				const bounds = card.getBoundingClientRect();
+				const distance = Math.abs(bounds.left + bounds.width / 2 - trackCenter);
+				if (distance < nearestDistance) {
+					nearestDistance = distance;
+					nearestIndex = index;
+				}
+			});
+			if (nearestIndex !== selectedIndex) {
+				selectCard(nearestIndex, false);
+			}
+		});
+	}, { passive: true });
+
+	carouselTrack.addEventListener('pointerdown', (event) => {
+		if (event.pointerType !== 'mouse' || event.button !== 0) {
+			return;
+		}
+		dragStart = { x: event.clientX, scrollLeft: carouselTrack.scrollLeft };
+		wasDragged = false;
+	});
+
+	window.addEventListener('pointermove', (event) => {
+		if (!dragStart) {
+			return;
+		}
+		const distance = event.clientX - dragStart.x;
+		if (Math.abs(distance) > 5) {
+			event.preventDefault();
+			wasDragged = true;
+			carouselTrack.scrollLeft = dragStart.scrollLeft - distance;
+		}
+	});
+
+	const endDrag = () => {
+		dragStart = null;
+	};
+	window.addEventListener('pointerup', endDrag);
+	window.addEventListener('pointercancel', endDrag);
+
+	dialogCloseButton.addEventListener('click', () => landmarkDialog.close());
+	landmarkDialog.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			landmarkDialog.close();
+		}
+	});
+	landmarkDialog.addEventListener('click', (event) => {
+		if (event.target === landmarkDialog) {
+			landmarkDialog.close();
+		}
+	});
+	landmarkDialog.addEventListener('close', () => {
+		if (opener instanceof HTMLElement) {
+			opener.focus();
+		}
+	});
+
+	positionCards();
+</script>
+
+<style>
+	.landmarks {
+		margin: 3rem 0;
+	}
+
+	.section-heading {
+		margin-bottom: 1.5rem;
+	}
+
+	.eyebrow {
+		margin: 0 0 0.45rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		opacity: 0.68;
+	}
+
+	.section-heading h2 {
+		margin-bottom: 0.4rem;
+		font-size: clamp(1.8rem, 4vw, 2.5rem);
+	}
+
+	.section-heading > p:last-child {
+		margin: 0;
+		opacity: 0.8;
+	}
+
+	.carousel-shell {
+		max-width: 100%;
+		overflow: hidden;
+		border: 1px solid rgba(var(--gray), 25%);
+		border-radius: 20px;
+		background: linear-gradient(145deg, rgba(var(--gray-light), 0.72), rgba(255, 255, 255, 0.28));
+		box-shadow: var(--box-shadow);
+	}
+
+	.carousel-track {
+		display: flex;
+		align-items: center;
+		gap: clamp(0.8rem, 3vw, 1.6rem);
+		max-width: 100%;
+		overflow-x: auto;
+		overflow-y: hidden;
+		padding: 2rem max(1rem, calc((100% - min(72vw, 390px)) / 2)) 2.2rem;
+		scroll-snap-type: x mandatory;
+		scroll-padding-inline: max(1rem, calc((100% - min(72vw, 390px)) / 2));
+		scrollbar-width: none;
+		overscroll-behavior-inline: contain;
+		touch-action: pan-x;
+		cursor: grab;
+	}
+
+	.carousel-track::-webkit-scrollbar {
+		display: none;
+	}
+
+	.carousel-track:active {
+		cursor: grabbing;
+	}
+
+	.landmark-card {
+		position: relative;
+		flex: 0 0 min(72vw, 390px);
+		aspect-ratio: 4 / 4.8;
+		padding: 0;
+		overflow: hidden;
+		border: 1px solid rgba(var(--gray), 28%);
+		border-radius: 18px;
+		background: #252d34;
+		color: #fff;
+		text-align: left;
+		scroll-snap-align: center;
+		cursor: pointer;
+		transform: perspective(1200px) scale(0.86);
+		opacity: 0.7;
+		filter: saturate(0.78);
+		transition: transform 450ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 350ms ease, filter 350ms ease,
+			box-shadow 350ms ease;
+	}
+
+	.landmark-card[data-position='left'] {
+		transform: perspective(1200px) rotateY(9deg) translateY(12px) scale(0.88);
+	}
+
+	.landmark-card[data-position='right'] {
+		transform: perspective(1200px) rotateY(-9deg) translateY(12px) scale(0.88);
+	}
+
+	.landmark-card[data-position='far'] {
+		transform: perspective(1200px) scale(0.82);
+	}
+
+	.landmark-card[data-position='center'] {
+		transform: perspective(1200px) scale(1);
+		opacity: 1;
+		filter: saturate(1);
+		box-shadow: 0 18px 40px rgba(12, 18, 25, 0.25);
+	}
+
+	.landmark-card:focus-visible,
+	.control-buttons button:focus-visible,
+	.dialog-close:focus-visible {
+		outline: 3px solid var(--accent);
+		outline-offset: 4px;
+	}
+
+	.landmark-card img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: inherit;
+		user-select: none;
+	}
+
+	.card-shade {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(0deg, rgba(4, 8, 12, 0.82), transparent 62%);
+		pointer-events: none;
+	}
+
+	.card-caption {
+		position: absolute;
+		right: 1.1rem;
+		bottom: 1.1rem;
+		left: 1.1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+	}
+
+	.card-name {
+		font-size: clamp(1.2rem, 3vw, 1.65rem);
+		font-weight: 700;
+		line-height: 1.2;
+	}
+
+	.card-action {
+		font-size: 0.83rem;
+		font-weight: 600;
+		opacity: 0.9;
+	}
+
+	.carousel-controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0 1.25rem 1.25rem;
+	}
+
+	.carousel-controls p {
+		margin: 0;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
+	.control-buttons {
+		display: flex;
+		gap: 0.55rem;
+	}
+
+	.control-buttons button {
+		width: 2.65rem;
+		height: 2.65rem;
+		border: 1px solid rgba(var(--gray), 35%);
+		border-radius: 50%;
+		background: var(--surface);
+		color: rgb(var(--black));
+		font-size: 1.25rem;
+		cursor: pointer;
+		transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
+	}
+
+	.control-buttons button:hover {
+		transform: translateY(-2px);
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+
+	.landmark-dialog {
+		position: fixed;
+		width: min(920px, calc(100% - 2rem));
+		max-width: 920px;
+		max-height: min(88vh, 760px);
+		padding: 0;
+		overflow: auto;
+		border: 1px solid rgba(255, 255, 255, 0.22);
+		border-radius: 22px;
+		background: var(--surface);
+		color: rgb(var(--gray-dark));
+		box-shadow: 0 24px 90px rgba(0, 0, 0, 0.42);
+	}
+
+	.landmark-dialog[open] {
+		display: grid;
+		grid-template-columns: minmax(0, 1.2fr) minmax(250px, 0.8fr);
+		animation: dialog-enter 220ms ease-out both;
+	}
+
+	.landmark-dialog::backdrop {
+		background: rgba(7, 11, 17, 0.76);
+		backdrop-filter: blur(7px);
+	}
+
+	.landmark-dialog > img {
+		width: 100%;
+		height: min(72vh, 640px);
+		min-height: 320px;
+		object-fit: cover;
+		border-radius: 0;
+		background: #252d34;
+	}
+
+	.dialog-copy {
+		align-self: center;
+		padding: clamp(1.5rem, 4vw, 3rem);
+	}
+
+	.dialog-copy h2 {
+		margin: 0.25rem 0 0.8rem;
+		font-size: clamp(1.8rem, 4vw, 2.8rem);
+	}
+
+	.dialog-copy > p:last-child {
+		margin: 0;
+		line-height: 1.7;
+	}
+
+	.dialog-close {
+		position: absolute;
+		z-index: 2;
+		top: 0.8rem;
+		right: 0.8rem;
+		display: grid;
+		place-items: center;
+		width: 2.7rem;
+		height: 2.7rem;
+		border: 1px solid rgba(var(--gray), 30%);
+		border-radius: 50%;
+		background: var(--surface);
+		color: rgb(var(--black));
+		font-size: 1.7rem;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	@keyframes dialog-enter {
+		from {
+			opacity: 0;
+			transform: translateY(12px) scale(0.98);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+
+	@media (max-width: 640px) {
+		.carousel-track {
+			gap: 0.6rem;
+			padding-block: 1.35rem 1.6rem;
+			padding-inline: max(1rem, calc((100% - 80vw) / 2));
+			scroll-padding-inline: max(1rem, calc((100% - 80vw) / 2));
+		}
+
+		.landmark-card {
+			flex-basis: 80vw;
+			aspect-ratio: 4 / 4.7;
+		}
+
+		.landmark-dialog[open] {
+			grid-template-columns: 1fr;
+			max-height: 90vh;
+			overflow-y: auto;
+		}
+
+		.landmark-dialog > img {
+			height: 44vh;
+			min-height: 230px;
+		}
+
+		.dialog-copy {
+			padding: 1.35rem 1.5rem 1.6rem;
+		}
+
+		.dialog-copy h2 {
+			padding-right: 2rem;
+		}
+
+		.carousel-controls {
+			padding-inline: 0.9rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.landmark-card,
+		.control-buttons button,
+		.landmark-dialog[open] {
+			transition: none;
+			animation: none;
+		}
+	}
+</style>

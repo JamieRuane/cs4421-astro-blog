@@ -1,0 +1,209 @@
+<div class="weather-card" data-weather-card>
+	<div class="weather-header">
+		<div>
+			<p class="weather-label">LOCAL WEATHER</p>
+			<h3>Askeaton, Co. Limerick</h3>
+		</div>
+		<div class="temperature-badge" data-temperature>--°C</div>
+	</div>
+
+	<div class="weather-body">
+		<p class="weather-condition" data-condition>Checking the forecast…</p>
+		<div class="weather-grid">
+			<div class="weather-stat">
+				<span>Feels like</span>
+				<strong data-feels-like>--°C</strong>
+			</div>
+			<div class="weather-stat">
+				<span>Wind</span>
+				<strong data-wind>-- km/h</strong>
+			</div>
+			<div class="weather-stat">
+				<span>Humidity</span>
+				<strong data-humidity>--%</strong>
+			</div>
+			<div class="weather-stat">
+				<span>Rain</span>
+				<strong data-rain>-- mm</strong>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="module">
+	const card = document.querySelector('[data-weather-card]');
+	if (!card) {
+		throw new Error('Weather component not found');
+	}
+
+	const temperatureNode = card.querySelector('[data-temperature]');
+	const conditionNode = card.querySelector('[data-condition]');
+	const feelsLikeNode = card.querySelector('[data-feels-like]');
+	const windNode = card.querySelector('[data-wind]');
+	const humidityNode = card.querySelector('[data-humidity]');
+	const rainNode = card.querySelector('[data-rain]');
+
+	const formatNumber = (value, digits = 0) => Number.isFinite(value) ? value.toFixed(digits) : '--';
+
+	async function loadWeather() {
+		try {
+			const response = await fetch('/api/weather');
+			if (!response.ok) {
+				throw new Error('Weather service is unavailable');
+			}
+
+			const data = await response.json();
+			const current = data.current;
+			const temperature = current?.temperature_2m ?? null;
+			const feelsLike = current?.apparent_temperature ?? null;
+			const wind = current?.wind_speed_10m ?? null;
+			const humidity = current?.relative_humidity_2m ?? null;
+			const rain = current?.precipitation ?? null;
+
+			if (temperatureNode) {
+				temperatureNode.textContent = `${formatNumber(temperature)}°C`;
+			}
+			if (conditionNode) {
+				conditionNode.textContent = current?.weather_description ?? 'Weather unavailable';
+			}
+			if (feelsLikeNode) {
+				feelsLikeNode.textContent = `${formatNumber(feelsLike)}°C`;
+			}
+			if (windNode) {
+				windNode.textContent = `${formatNumber(wind)} km/h`;
+			}
+			if (humidityNode) {
+				humidityNode.textContent = `${formatNumber(humidity)}%`;
+			}
+			if (rainNode) {
+				rainNode.textContent = `${formatNumber(rain, 1)} mm`;
+			}
+		} catch (error) {
+			console.error('Unable to fetch weather data', error);
+			if (conditionNode) {
+				conditionNode.textContent = 'Weather data unavailable';
+			}
+			if (temperatureNode) {
+				temperatureNode.textContent = '–';
+			}
+			if (feelsLikeNode) {
+				feelsLikeNode.textContent = '–';
+			}
+			if (windNode) {
+				windNode.textContent = '–';
+			}
+			if (humidityNode) {
+				humidityNode.textContent = '–';
+			}
+			if (rainNode) {
+				rainNode.textContent = '–';
+			}
+		}
+	}
+
+	loadWeather();
+</script>
+
+<style>
+	.weather-card {
+		margin-top: 2rem;
+		padding: 1.5rem;
+		border: 1px solid rgba(var(--gray), 25%);
+		border-radius: 18px;
+		background: rgba(var(--gray-light), 0.45);
+		box-shadow: var(--box-shadow);
+	}
+
+	.weather-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.weather-label,
+	.map-label {
+		margin: 0 0 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		opacity: 0.7;
+	}
+
+	.weather-card h3,
+	.map-card h3 {
+		margin: 0;
+		font-size: clamp(1.5rem, 3vw, 2.2rem);
+	}
+
+	.temperature-badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 88px;
+		padding: 0.7rem 0.9rem;
+		font-size: 1.8rem;
+		font-weight: 700;
+		border-radius: 999px;
+		background: rgba(var(--accent), 0.1);
+		color: var(--accent);
+	}
+
+	.weather-body {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.weather-condition {
+		margin: 0;
+		font-size: 1.05rem;
+		font-weight: 600;
+	}
+
+	.weather-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem;
+	}
+
+	.weather-stat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.85rem 1rem;
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.35);
+		border: 1px solid rgba(var(--gray), 18%);
+	}
+
+	.weather-stat span {
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		opacity: 0.72;
+	}
+
+	.weather-stat strong {
+		font-size: 1.1rem;
+		color: rgb(var(--black));
+	}
+
+	@media (max-width: 600px) {
+		.weather-card {
+			padding: 1rem;
+		}
+
+		.weather-header {
+			align-items: flex-start;
+			flex-direction: column;
+		}
+
+		.temperature-badge {
+			min-width: unset;
+			padding: 0.5rem 0.8rem;
+			font-size: 1.5rem;
+		}
+	}
+</style>

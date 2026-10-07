@@ -1,18 +1,36 @@
 ---
-import AboutHeroImage from '../assets/about-me-jamie.png';
 import Layout from '../layouts/BlogPost.astro';
+import Weather from '../components/Weather.astro';
+import AskeatonLandmarks from '../components/AskeatonLandmarks.astro';
 ---
 
 <Layout
-	title="About Me"
-	description="Lorem ipsum dolor sit amet"
+	title="My Place"
+	description="A look at Askeaton, Co. Limerick, and the places that shape everyday life in my hometown."
 	pubDate={new Date('September 23 2026')}
-	heroImage={AboutHeroImage}
-	heroImageAlt="Jamie Ruane standing in front of the Hungarian Parliament building in winter"
+	heroImageSrc="/images/askeaton/myplace.png"
+	heroImageAlt="Aerial view of Askeaton, County Limerick"
+	heroTitle="My Place"
+	heroSubtitle="Askeaton, Co. Limerick — a close-knit town shaped by history, community and the Shannon estuary."
 >
 	<p>
-		My name is Jamie and I am a software engineering student at the University of Limerick. I am
-		interested in software development, DevOps and technology, and I am currently developing my
-		programming and engineering skills through university projects.
+		Askeaton is a small town in County Limerick that sits on the edge of the Shannon estuary. It is
+		one of those places where the pace is a little slower, the landscape is always changing, and the
+		history feels close to the surface.
 	</p>
+
+	<p>
+		For me, it is a place shaped by old stone buildings, a strong sense of community, and the quiet
+		beauty of the west of Ireland. Whether walking past the castle, heading through the town centre,
+		or looking out over the surrounding countryside, it is easy to see why Askeaton feels like home.
+	</p>
+
+	<p>
+		The town has a mix of heritage and everyday life, with the Franciscan Friary, the church, the
+		local leisure centre, and the river all giving the place its own character. It is a place of both
+		memory and movement, where history sits comfortably alongside modern community life.
+	</p>
+
+	<AskeatonLandmarks />
+	<Weather />
 </Layout>
