@@ -2,54 +2,40 @@
 
 ## Status
 
-Accepted
+Superseded on 2026-10-07 by the static S3 + CloudFront deployment.
 
 Date: 2026-10-05
 
 ## Context
 
-Our blog currently uses Astro's static site generation.
-
-Static hosting on Amazon S3 and CloudFront works well for serving
-pre-generated HTML, but it cannot execute server-side Node.js code.
-
-Our application now requires dynamic API endpoints such as:
-
-- `/api/health`
-- `/api/feedback`
-
-These endpoints require server-side execution.
-
-Therefore, the current static architecture is no longer sufficient
-for the requirements of the application.
+The blog is deployed as static files to a private S3 bucket behind
+CloudFront. S3 cannot execute Astro's Node server or dynamic API routes.
+The weather data is public and requires no secret key, so the browser can
+request it directly from Open-Meteo without a server-side endpoint.
 
 ## Decision
 
-We will migrate the Astro application from static site generation
-to server-side rendering (SSR).
+Use Astro static output and deploy the generated `dist/` files to S3 +
+CloudFront. The Weather component calls Open-Meteo directly from the browser;
+the CSP connect-src policy allows only `https://api.open-meteo.com` in
+addition to the site's own origin. The existing health API is prerendered as
+static JSON, and CloudFront rewrites `/api/health` to that file. The deployment
+workflow continues to check the separate `/health.json` endpoint.
 
-Astro will use the `@astrojs/node` adapter in standalone mode.
-
-The application will then be packaged and deployed as a Docker
-container.
-
-The new architecture will allow Astro to execute server-side
-JavaScript and provide dynamic API routes.
+If future features require private credentials or server-side dynamic
+responses, introduce a separate API service such as API Gateway + Lambda
+instead of deploying Astro's Node server to S3.
 
 ## Consequences
 
 ### Positive
 
-- Enables server-side API routes.
-- Enables dynamic rendering.
-- Allows `/api/health` and `/api/feedback` endpoints.
-- Provides better support for operational health checks.
-- Provides a foundation for future dynamic functionality.
+- S3 + CloudFront can serve the complete site without a Node runtime.
+- Weather remains current through a public browser-to-provider request.
+- Both health-check URLs remain available as static JSON.
 
 ### Negative
 
-- The application is more operationally complex.
-- A Node.js runtime is now required.
-- The application must run inside a container.
-- Container infrastructure introduces additional deployment and
-  maintenance requirements.
+- Browser users request weather directly from Open-Meteo; no server-side
+  proxy or secret API key is used.
+- Future secret-dependent server APIs will require a separate backend.

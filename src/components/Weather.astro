@@ -30,53 +30,91 @@
 	</div>
 </div>
 
-<script type="module">
-	const card = document.querySelector('[data-weather-card]');
+<script>
+	type WeatherResponse = {
+		current?: {
+			temperature_2m?: number;
+			relative_humidity_2m?: number;
+			apparent_temperature?: number;
+			precipitation?: number;
+			weather_code?: number;
+			wind_speed_10m?: number;
+		};
+	};
+
+	const weatherDescriptions: Record<number, string> = {
+		0: 'Clear sky',
+		1: 'Mainly clear',
+		2: 'Partly cloudy',
+		3: 'Overcast',
+		45: 'Foggy',
+		48: 'Depositing rime fog',
+		51: 'Light drizzle',
+		53: 'Moderate drizzle',
+		55: 'Dense drizzle',
+		56: 'Freezing drizzle',
+		57: 'Heavy freezing drizzle',
+		61: 'Slight rain',
+		63: 'Moderate rain',
+		65: 'Heavy rain',
+		66: 'Light freezing rain',
+		67: 'Heavy freezing rain',
+		71: 'Light snow',
+		73: 'Moderate snow',
+		75: 'Heavy snow',
+		77: 'Snow grains',
+		80: 'Rain showers',
+		81: 'Heavy showers',
+		82: 'Violent showers',
+		85: 'Light snow showers',
+		86: 'Heavy snow showers',
+		95: 'Thunderstorm',
+		96: 'Thunderstorm with hail',
+		99: 'Severe thunderstorm',
+	};
+
+	const card = document.querySelector<HTMLElement>('[data-weather-card]');
 	if (!card) {
 		throw new Error('Weather component not found');
 	}
 
-	const temperatureNode = card.querySelector('[data-temperature]');
-	const conditionNode = card.querySelector('[data-condition]');
-	const feelsLikeNode = card.querySelector('[data-feels-like]');
-	const windNode = card.querySelector('[data-wind]');
-	const humidityNode = card.querySelector('[data-humidity]');
-	const rainNode = card.querySelector('[data-rain]');
+	const temperatureNode = card.querySelector<HTMLElement>('[data-temperature]');
+	const conditionNode = card.querySelector<HTMLElement>('[data-condition]');
+	const feelsLikeNode = card.querySelector<HTMLElement>('[data-feels-like]');
+	const windNode = card.querySelector<HTMLElement>('[data-wind]');
+	const humidityNode = card.querySelector<HTMLElement>('[data-humidity]');
+	const rainNode = card.querySelector<HTMLElement>('[data-rain]');
 
-	const formatNumber = (value, digits = 0) => Number.isFinite(value) ? value.toFixed(digits) : '--';
+	const formatNumber = (value: number | undefined, digits = 0) =>
+		typeof value === 'number' && Number.isFinite(value) ? value.toFixed(digits) : '--';
 
 	async function loadWeather() {
 		try {
 			const response = await fetch('/api/weather');
 			if (!response.ok) {
-				throw new Error('Weather service is unavailable');
+				throw new Error(`Weather service returned ${response.status}`);
 			}
 
-			const data = await response.json();
+			const data: WeatherResponse = await response.json();
 			const current = data.current;
-			const temperature = current?.temperature_2m ?? null;
-			const feelsLike = current?.apparent_temperature ?? null;
-			const wind = current?.wind_speed_10m ?? null;
-			const humidity = current?.relative_humidity_2m ?? null;
-			const rain = current?.precipitation ?? null;
 
 			if (temperatureNode) {
-				temperatureNode.textContent = `${formatNumber(temperature)}°C`;
+				temperatureNode.textContent = `${formatNumber(current?.temperature_2m)}°C`;
 			}
 			if (conditionNode) {
-				conditionNode.textContent = current?.weather_description ?? 'Weather unavailable';
+				conditionNode.textContent = weatherDescriptions[current?.weather_code ?? -1] ?? 'Weather unavailable';
 			}
 			if (feelsLikeNode) {
-				feelsLikeNode.textContent = `${formatNumber(feelsLike)}°C`;
+				feelsLikeNode.textContent = `${formatNumber(current?.apparent_temperature)}°C`;
 			}
 			if (windNode) {
-				windNode.textContent = `${formatNumber(wind)} km/h`;
+				windNode.textContent = `${formatNumber(current?.wind_speed_10m)} km/h`;
 			}
 			if (humidityNode) {
-				humidityNode.textContent = `${formatNumber(humidity)}%`;
+				humidityNode.textContent = `${formatNumber(current?.relative_humidity_2m)}%`;
 			}
 			if (rainNode) {
-				rainNode.textContent = `${formatNumber(rain, 1)} mm`;
+				rainNode.textContent = `${formatNumber(current?.precipitation, 1)} mm`;
 			}
 		} catch (error) {
 			console.error('Unable to fetch weather data', error);
@@ -122,8 +160,7 @@
 		margin-bottom: 1rem;
 	}
 
-	.weather-label,
-	.map-label {
+	.weather-label {
 		margin: 0 0 0.5rem;
 		font-size: 0.75rem;
 		font-weight: 700;
@@ -131,8 +168,7 @@
 		opacity: 0.7;
 	}
 
-	.weather-card h3,
-	.map-card h3 {
+	.weather-card h3 {
 		margin: 0;
 		font-size: clamp(1.5rem, 3vw, 2.2rem);
 	}

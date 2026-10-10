@@ -2,16 +2,15 @@
 import { getEntry, render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
 
-const post = Astro.params.slug ? await getEntry('blog', Astro.params.slug) : undefined;
-const Content = post ? (await render(post)).Content : undefined;
-const author = post?.data.author ? await getEntry('authors', post.data.author) : undefined;
-const postData = post?.data ?? {
-	title: 'Post not found',
-	description: 'The requested blog post could not be found.',
-	pubDate: new Date(),
-};
+const slug = Astro.params.slug;
+const post = slug ? await getEntry('blog', slug) : undefined;
+if (!post) {
+	return new Response(null, { status: 404 });
+}
+const { Content } = await render(post);
+const author = post.data.author ? await getEntry(post.data.author) : undefined;
 ---
 
-<BlogPost {...postData} author={author?.data}>
-	{Content ? <Content /> : <p>This post could not be found. <a href="/blog">Browse all posts</a>.</p>}
+<BlogPost {...post.data} author={author?.data}>
+	<Content />
 </BlogPost>
