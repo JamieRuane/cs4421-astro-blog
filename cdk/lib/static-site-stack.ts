@@ -28,6 +28,12 @@ export class StaticSiteStack extends cdk.Stack {
       var request = event.request;
       var uri = request.uri;
 
+      // Preserve the existing API health-check path with its static JSON file.
+      if (uri === "/api/health") {
+        request.uri = "/api/health.json";
+        return request;
+      }
+
       // /blog -> /blog/index.html
       // /blog/ -> /blog/index.html
       // /blog/post -> /blog/post/index.html

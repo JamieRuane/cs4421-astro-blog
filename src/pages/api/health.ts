@@ -1,9 +1,10 @@
-export const prerender = false;
+import type { APIRoute } from 'astro';
 
-export async function GET() {
+export const GET = (async () => {
     return new Response(
         JSON.stringify({
             status: 'ok',
+            uptime: process.uptime(),
             timestamp: new Date().toISOString(),
         }),
         {
@@ -11,6 +12,6 @@ export async function GET() {
             headers: {
                 'Content-Type': 'application/json',
             },
-        }
+        },
     );
-}
+}) satisfies APIRoute;
