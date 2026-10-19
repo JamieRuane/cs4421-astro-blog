@@ -1,0 +1,58 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import DinoGame from '../../components/DinoGame.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title="Games | Jamie Ruane"
+			description="Take a break and play the Dino Game."
+		/>
+	</head>
+
+	<body>
+		<Header />
+
+		<main>
+			<p class="eyebrow">A LITTLE BREAK</p>
+			<h1>Games</h1>
+			<p class="intro">Help the little dinosaur jump over the obstacles. Press Space to jump; after game over, press Space to try again.</p>
+			<DinoGame />
+		</main>
+
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main {
+		box-sizing: border-box;
+		width: min(900px, calc(100% - 2rem));
+		max-width: none;
+		padding-block: clamp(3rem, 8vh, 6rem);
+	}
+
+	.eyebrow {
+		margin: 0 0 0.65rem;
+		color: rgb(var(--gray));
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(3rem, 8vw, 5rem);
+		letter-spacing: -0.06em;
+	}
+
+	.intro {
+		max-width: 38rem;
+		margin: 1rem 0 0;
+		color: rgb(var(--gray-dark));
+	}
+</style>
