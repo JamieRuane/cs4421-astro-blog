@@ -1,0 +1,53 @@
+---
+import { WORDLE_MAX_GUESSES, WORDLE_LENGTH } from '../games/wordle';
+---
+
+<section class="mini-game wordle-game" data-wordle tabindex="0" aria-label="Wordle game">
+	<div
+		class="wordle-grid"
+		data-wordle-grid
+		role="grid"
+		aria-label={`${WORDLE_MAX_GUESSES} guesses, ${WORDLE_LENGTH} letters per guess`}
+	>
+		{Array.from({ length: WORDLE_MAX_GUESSES }, (_, row) => (
+			<div class="wordle-row" role="row" aria-label={`Guess ${row + 1}`}>
+				{Array.from({ length: WORDLE_LENGTH }, (_, column) => (
+					<span class="wordle-tile" data-row={row} data-column={column} role="gridcell"></span>
+				))}
+			</div>
+		))}
+	</div>
+
+	<p class="game-status wordle-status" data-wordle-status role="status" aria-live="polite">
+		Enter a five-letter word to start.
+	</p>
+
+	<div class="wordle-keyboard" role="group" aria-label="Wordle keyboard">
+		<div class="wordle-key-row">
+			{[...'QWERTYUIOP'].map((letter) => (
+				<button type="button" class="wordle-key" data-key={letter}>{letter}</button>
+			))}
+		</div>
+		<div class="wordle-key-row">
+			{[...'ASDFGHJKL'].map((letter) => (
+				<button type="button" class="wordle-key" data-key={letter}>{letter}</button>
+			))}
+		</div>
+		<div class="wordle-key-row">
+			<button type="button" class="wordle-key wordle-key-wide" data-key="ENTER">Enter</button>
+			{[...'ZXCVBNM'].map((letter) => (
+				<button type="button" class="wordle-key" data-key={letter}>{letter}</button>
+			))}
+			<button type="button" class="wordle-key wordle-key-wide" data-key="BACKSPACE" aria-label="Delete last letter">
+				⌫
+			</button>
+		</div>
+	</div>
+
+	<div class="game-actions">
+		<button type="button" class="game-action" data-wordle-restart>New game</button>
+		<p>Type on your keyboard or use the buttons above.</p>
+	</div>
+</section>
+
+<script src="../games/wordle-client.ts"></script>

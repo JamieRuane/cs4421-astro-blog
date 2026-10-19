@@ -2,57 +2,72 @@
 import BaseHead from '../../components/BaseHead.astro';
 import DinoGame from '../../components/DinoGame.astro';
 import Footer from '../../components/Footer.astro';
+import Hangman from '../../components/Hangman.astro';
 import Header from '../../components/Header.astro';
+import Wordle from '../../components/Wordle.astro';
+import { SITE_TITLE } from '../../consts';
+import '../../styles/games.css';
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead
-			title="Games | Jamie Ruane"
-			description="Take a break and play the Dino Game."
+			title={`Games | ${SITE_TITLE}`}
+			description="Take a break with Dino Run, About Me Hangman and Wordle."
 		/>
 	</head>
 
 	<body>
 		<Header />
 
-		<main>
-			<p class="eyebrow">A LITTLE BREAK</p>
-			<h1>Games</h1>
-			<p class="intro">Help the little dinosaur jump over the obstacles. Press Space to jump; after game over, press Space to try again.</p>
-			<DinoGame />
+		<main class="arcade">
+			<header class="arcade-heading">
+				<p class="arcade-eyebrow">TAKE A LITTLE BREAK</p>
+				<h1>Games<span>.</span></h1>
+				<p>Three quick ways to play. Pick a favourite and jump in.</p>
+			</header>
+
+			<nav class="arcade-nav" aria-label="Choose a game">
+				<a href="#dino-run"><span aria-hidden="true">↗</span> Dino Run</a>
+				<a href="#hangman"><span aria-hidden="true">↗</span> About Me Hangman</a>
+				<a href="#wordle"><span aria-hidden="true">↗</span> Wordle</a>
+			</nav>
+
+			<section class="arcade-section" id="dino-run" aria-labelledby="dino-heading">
+				<div class="arcade-section-heading">
+					<div>
+						<p class="arcade-eyebrow">01 · QUICK REFLEXES</p>
+						<h2 id="dino-heading">Dino Run</h2>
+					</div>
+					<p>Jump the obstacles. How long can you last?</p>
+				</div>
+				<DinoGame />
+			</section>
+
+			<section class="arcade-section" id="hangman" aria-labelledby="hangman-heading">
+				<div class="arcade-section-heading">
+					<div>
+						<p class="arcade-eyebrow">02 · A FEW CLUES ABOUT ME</p>
+						<h2 id="hangman-heading">About Me Hangman</h2>
+					</div>
+					<p>Guess a word about my interests and experiences.</p>
+				</div>
+				<Hangman />
+			</section>
+
+			<section class="arcade-section" id="wordle" aria-labelledby="wordle-heading">
+				<div class="arcade-section-heading">
+					<div>
+						<p class="arcade-eyebrow">03 · SIX GUESSES</p>
+						<h2 id="wordle-heading">Wordle</h2>
+					</div>
+					<p>Find the five-letter word. Every guess gets you closer.</p>
+				</div>
+				<Wordle />
+			</section>
 		</main>
 
 		<Footer />
 	</body>
 </html>
-
-<style>
-	main {
-		box-sizing: border-box;
-		width: min(900px, calc(100% - 2rem));
-		max-width: none;
-		padding-block: clamp(3rem, 8vh, 6rem);
-	}
-
-	.eyebrow {
-		margin: 0 0 0.65rem;
-		color: rgb(var(--gray));
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.15em;
-	}
-
-	h1 {
-		margin: 0;
-		font-size: clamp(3rem, 8vw, 5rem);
-		letter-spacing: -0.06em;
-	}
-
-	.intro {
-		max-width: 38rem;
-		margin: 1rem 0 0;
-		color: rgb(var(--gray-dark));
-	}
-</style>
