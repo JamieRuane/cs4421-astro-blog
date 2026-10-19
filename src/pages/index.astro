@@ -3,7 +3,6 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import DinoGame from '../components/DinoGame.astro';
 ---
 
 <!doctype html>
@@ -16,25 +15,33 @@ import DinoGame from '../components/DinoGame.astro';
 		<Header />
 
 		<main>
-			<section class="welcome">
-				<p class="eyebrow">HELLO 👋</p>
+			<section class="welcome" aria-labelledby="welcome-title">
+				<div class="welcome-copy">
+					<p class="eyebrow"><span class="status-dot"></span> SOFTWARE ENGINEERING STUDENT · IRELAND</p>
+					<h1 id="welcome-title">
+						<span class="title-line">Curious by nature.</span>
+						{' '}
+						<span class="title-line accent-line">Always exploring.</span>
+					</h1>
+					<p class="intro">
+						Hi, I’m Jamie. I’m into technology, music, travel and the little things
+						that make a place feel like home. This is where I share what I’m learning
+						and what I love.
+					</p>
+					<div class="welcome-links">
+						<a class="primary-link" href="/blog/">Explore My Ideas <span aria-hidden="true">↗</span></a>
+						<a class="secondary-link" href="/games/">Play the Dino Game</a>
+					</div>
+				</div>
 
-				<h1>WELCOME TO MY BLOG!</h1>
-
-				<p class="intro">
-					Hi, I'm Jamie — a software engineering student from Ireland
-					who enjoys technology, music, travel and learning new things.
-				</p>
-			</section>
-			<section class="game-section">
-				<p class="eyebrow">TAKE A BREAK</p>
-
-				<h2>TRY OUT A QUICK GAME</h2>
-
-				<p>
-					Help the little dinosaur jump over the obstacles!
-				</p>
-<DinoGame />
+				<div class="welcome-art" aria-hidden="true">
+					<div class="art-orbit orbit-one"></div>
+					<div class="art-orbit orbit-two"></div>
+					<div class="art-sun"></div>
+					<div class="art-spark spark-one"></div>
+					<div class="art-spark spark-two"></div>
+					<div class="art-caption">A work in progress<br /><span>and that’s the fun part.</span></div>
+				</div>
 			</section>
 		</main>
 
@@ -44,72 +51,259 @@ import DinoGame from '../components/DinoGame.astro';
 
 <style>
 	main {
-		max-width: 900px;
-		margin: 0 auto;
-		padding: 80px 20px;
+		box-sizing: border-box;
+		width: min(1180px, calc(100% - 3rem));
+		max-width: none;
+		min-height: min(690px, calc(100svh - 190px));
+		display: grid;
+		align-items: center;
+		padding-block: clamp(3rem, 9vh, 7rem);
 	}
 
 	.welcome {
-		margin-bottom: 100px;
+		display: grid;
+		width: 100%;
+		min-width: 0;
+		grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+		align-items: center;
+		gap: clamp(2rem, 7vw, 7rem);
+	}
+
+	.welcome-copy {
+		position: relative;
+		z-index: 1;
+		min-width: 0;
 	}
 
 	.eyebrow {
-		font-size: 0.8rem;
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		margin: 0 0 1.5rem;
+		color: rgb(var(--gray));
+		font-size: 0.72rem;
 		font-weight: 700;
-		letter-spacing: 0.15em;
-		opacity: 0.6;
-		margin-bottom: 20px;
+		letter-spacing: 0.16em;
+	}
+
+	.status-dot {
+		width: 0.55rem;
+		height: 0.55rem;
+		flex: 0 0 auto;
+		border-radius: 50%;
+		background: #e8a66d;
+		box-shadow: 0 0 0 4px rgba(232, 166, 109, 0.16);
 	}
 
 	h1 {
-		font-size: clamp(3rem, 8vw, 6rem);
-		line-height: 1;
-		margin-bottom: 30px;
+		margin: 0;
+		font-size: clamp(3.2rem, 6.2vw, 6rem);
+		font-weight: 700;
+		letter-spacing: -0.075em;
+		line-height: 0.99;
+	}
+
+	.title-line {
+		display: block;
+		white-space: nowrap;
+	}
+
+	.accent-line {
+		color: var(--accent);
 	}
 
 	.intro {
-		max-width: 650px;
-		font-size: 1.2rem;
-		line-height: 1.7;
-		opacity: 0.8;
+		max-width: 36rem;
+		margin: 1.8rem 0 0;
+		color: rgb(var(--gray-dark));
+		font-size: clamp(1.05rem, 1.7vw, 1.25rem);
+		line-height: 1.75;
 	}
 
-	.game-section {
-		border-top: 1px solid currentColor;
-		padding-top: 40px;
-	}
-
-	h2 {
-		font-size: 2rem;
-		margin-bottom: 10px;
-	}
-
-	.game-placeholder {
-		margin-top: 30px;
-		min-height: 250px;
-		border: 1px solid currentColor;
+	.welcome-links {
 		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.8rem 1.5rem;
+		margin-top: 2rem;
+	}
+
+	.welcome-links a {
+		min-height: 2.9rem;
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		opacity: 0.7;
-	}
-
-	.game-placeholder p {
+		text-decoration: none;
+		font-size: 0.95rem;
 		font-weight: 700;
-		letter-spacing: 0.1em;
 	}
 
-	@media (max-width: 600px) {
+	.primary-link {
+		gap: 0.9rem;
+		padding: 0.65rem 1.15rem;
+		border-radius: 999px;
+		background: rgb(var(--black));
+		color: var(--surface);
+		transition: transform 180ms ease, background-color 180ms ease;
+	}
+
+	.primary-link:hover {
+		transform: translateY(-2px);
+		background: var(--accent-dark);
+		color: var(--surface);
+	}
+
+	.secondary-link {
+		color: rgb(var(--gray-dark));
+		text-decoration: underline !important;
+		text-decoration-color: rgba(var(--gray), 55%) !important;
+		text-underline-offset: 0.3em;
+	}
+
+	.secondary-link:hover {
+		color: var(--accent);
+	}
+
+	a:focus-visible {
+		outline: 3px solid var(--accent);
+		outline-offset: 4px;
+	}
+
+	.welcome-art {
+		position: relative;
+		width: min(100%, 450px);
+		aspect-ratio: 1;
+		justify-self: center;
+		isolation: isolate;
+	}
+
+	.welcome-art::before {
+		position: absolute;
+		z-index: -1;
+		inset: 10%;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgba(143, 163, 255, 0.16), transparent 68%);
+		content: '';
+	}
+
+	.art-orbit {
+		position: absolute;
+		inset: 13%;
+		border: 1px solid rgba(var(--gray), 28%);
+		border-radius: 50%;
+		transform: rotate(-32deg) scaleY(0.46);
+	}
+
+	.orbit-two {
+		transform: rotate(54deg) scaleY(0.46);
+	}
+
+	.art-sun {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 43%;
+		aspect-ratio: 1;
+		border: 1px solid rgba(232, 166, 109, 0.42);
+		border-radius: 50%;
+		background:
+			radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.45), transparent 28%),
+			linear-gradient(145deg, #edbf89, #d98267 70%, #ad6a87);
+		box-shadow: 0 22px 70px rgba(201, 123, 115, 0.22);
+		transform: translate(-50%, -50%);
+	}
+
+	.art-spark {
+		position: absolute;
+		width: 0.8rem;
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: var(--accent);
+		box-shadow: 0 0 0 7px rgba(143, 163, 255, 0.12);
+	}
+
+	.spark-one {
+		top: 23%;
+		right: 16%;
+	}
+
+	.spark-two {
+		bottom: 21%;
+		left: 18%;
+		width: 0.55rem;
+		background: #e8a66d;
+		box-shadow: 0 0 0 6px rgba(232, 166, 109, 0.13);
+	}
+
+	.art-caption {
+		position: absolute;
+		right: 1%;
+		bottom: 15%;
+		padding: 0.75rem 0.95rem;
+		border: 1px solid rgba(var(--gray), 24%);
+		border-radius: 0.85rem;
+		background: var(--surface);
+		box-shadow: 0 12px 36px rgba(var(--black), 9%);
+		color: rgb(var(--black));
+		font-size: 0.8rem;
+		font-weight: 700;
+		line-height: 1.5;
+		transform: rotate(-4deg);
+	}
+
+	.art-caption span {
+		color: rgb(var(--gray));
+		font-weight: 400;
+	}
+
+	@media (max-width: 760px) {
 		main {
-			padding: 60px 20px;
+			width: min(100% - 2rem, 560px);
+			min-height: auto;
+			padding-block: 4rem 3rem;
+		}
+
+		.welcome {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
+
+		.welcome-art {
+			width: min(78vw, 340px);
+			grid-row: 1;
+		}
+
+		.welcome-copy {
+			grid-row: 2;
+		}
+
+		.eyebrow {
+			font-size: 0.65rem;
+			letter-spacing: 0.12em;
 		}
 
 		h1 {
-			font-size: 3rem;
+			font-size: clamp(2.55rem, 11vw, 4.5rem);
 		}
 
 		.intro {
-			font-size: 1.05rem;
+			margin-top: 1.2rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.primary-link {
+			transition: none;
+		}
+	}
+
+	@media (max-width: 360px) {
+		h1 {
+			font-size: clamp(2rem, 10.5vw, 2.35rem);
+		}
+
+		.welcome-art {
+			width: min(72vw, 240px);
 		}
 	}
 </style>

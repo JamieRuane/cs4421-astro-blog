@@ -4,11 +4,11 @@ import HeaderLink from './HeaderLink.astro';
 ---
 
 <header>
-	<nav>
+	<nav aria-label="Main navigation">
 		<h2><a href="/">{SITE_TITLE}</a></h2>
 		<div class="internal-links">
 			<HeaderLink href="/">Home</HeaderLink>
-			<HeaderLink href="/blog">Blog</HeaderLink>
+			<HeaderLink href="/blog">My Ideas</HeaderLink>
 			<HeaderLink href="/about">My Place</HeaderLink>
 		</div>
 		<button id="theme-toggle" type="button" aria-label="Switch to dark mode">
@@ -54,7 +54,7 @@ import HeaderLink from './HeaderLink.astro';
 <style>
 	header {
 		margin: 0;
-		padding: 0 1em;
+		padding: 0 clamp(1rem, 4vw, 2.5rem);
 		background: var(--surface);
 		box-shadow: 0 2px 8px rgba(var(--black), 5%);
 	}
@@ -71,12 +71,26 @@ import HeaderLink from './HeaderLink.astro';
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		gap: 1rem;
+		max-width: 1440px;
+		min-height: 4.5rem;
+		margin-inline: auto;
+	}
+	.internal-links {
+		display: flex;
+		align-items: center;
+		gap: clamp(0.15rem, 1.5vw, 1.25rem);
 	}
 	nav a {
-		padding: 1em 0.5em;
+		padding: 0.8rem 0.55rem;
 		color: var(--black);
-		border-bottom: 4px solid transparent;
+		border-bottom: 3px solid transparent;
 		text-decoration: none;
+		font-size: 0.95rem;
+	}
+	nav h2 a {
+		padding-inline: 0;
+		letter-spacing: -0.04em;
 	}
 	nav a.active {
 		text-decoration: none;
@@ -122,9 +136,47 @@ import HeaderLink from './HeaderLink.astro';
 	.social-links a {
 		display: flex;
 	}
+	.social-links {
+		gap: 0.35rem;
+	}
+	.social-links a {
+		align-items: center;
+		justify-content: center;
+		padding: 0.25rem;
+	}
+	.social-links svg {
+		width: 1.35rem;
+		height: 1.35rem;
+	}
 	@media (max-width: 720px) {
 		.social-links {
 			display: none;
+		}
+	}
+	@media (max-width: 520px) {
+		header {
+			padding-inline: 1rem;
+		}
+		nav {
+			flex-wrap: wrap;
+			gap: 0 0.75rem;
+			padding-top: 0.5rem;
+		}
+		nav h2 {
+			margin-right: auto;
+		}
+		.internal-links {
+			order: 2;
+			flex: 1 0 100%;
+			justify-content: center;
+			gap: clamp(0.5rem, 6vw, 1.5rem);
+		}
+		.internal-links a {
+			padding: 0.65rem 0.2rem;
+			font-size: 0.9rem;
+		}
+		#theme-toggle {
+			margin: 0.25rem 0;
 		}
 	}
 </style>
