@@ -1,0 +1,53 @@
+---
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+---
+
+<section
+	class="mini-game hangman-game"
+	data-hangman
+	tabindex="0"
+	aria-label="About Me Hangman game"
+>
+	<div class="hangman-top">
+		<div>
+			<p class="game-kicker">THE CLUE</p>
+			<p class="hangman-hint" data-hint-text>Choose a letter to reveal the hint.</p>
+		</div>
+		<div class="attempt-counter" aria-live="polite">
+			<span data-mistakes>0</span> / 6 misses
+		</div>
+	</div>
+
+	<div class="hangman-play-area">
+		<svg class="hangman-drawing" viewBox="0 0 180 170" role="img" aria-label="Hangman drawing">
+			<g class="hangman-scaffold">
+				<path d="M22 155H145M55 155V18H126V36" />
+			</g>
+			<circle data-part class="is-hidden" cx="126" cy="51" r="15" />
+			<path data-part class="is-hidden" d="M126 66V108" />
+			<path data-part class="is-hidden" d="M126 76L104 94" />
+			<path data-part class="is-hidden" d="M126 76L148 94" />
+			<path data-part class="is-hidden" d="M126 108L106 135" />
+			<path data-part class="is-hidden" d="M126 108L146 135" />
+		</svg>
+
+		<div class="hangman-word" data-word-display role="group" aria-label="Word to guess"></div>
+	</div>
+
+	<p class="game-status" data-status role="status" aria-live="polite">Choose a letter to begin.</p>
+
+	<div class="hangman-keyboard" role="group" aria-label="Choose a letter">
+		{[...alphabet].map((letter) => (
+			<button type="button" class="letter-key" data-letter={letter} aria-pressed="false">
+				{letter}
+			</button>
+		))}
+	</div>
+
+	<div class="game-actions">
+		<button type="button" class="game-action" data-new-round>New word</button>
+		<p>Tip: you can also use your physical keyboard.</p>
+	</div>
+</section>
+
+<script src="../games/hangman-client.ts"></script>
