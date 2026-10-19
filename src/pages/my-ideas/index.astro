@@ -1,0 +1,305 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
+
+const sections = [
+	{
+		title: 'Blogs',
+		description: 'Thoughts, stories and things I’ve explored along the way.',
+		destination: '/blog/',
+		action: 'Read the blogs',
+		icon: 'book',
+	},
+	{
+		title: 'Games',
+		description: 'Little games for a quick break and a bit of fun.',
+		destination: '/games/',
+		action: 'Play a game',
+		icon: 'game',
+	},
+	{
+		title: 'Music',
+		description: 'Artists, tracks and sounds I keep coming back to.',
+		destination: '/music/',
+		action: 'Explore music',
+		icon: 'music',
+	},
+	{
+		title: 'Movies',
+		description: 'Films to revisit, discover and talk about.',
+		destination: '/movies/',
+		action: 'Explore movies',
+		icon: 'movie',
+	},
+];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`My Ideas | ${SITE_TITLE}`}
+			description="A little collection of Jamie's blogs, games, music and movies."
+		/>
+	</head>
+
+	<body>
+		<Header />
+
+		<main>
+			<header class="page-heading">
+				<p class="eyebrow"><span class="heading-mark"></span> NOTES, PLAYLISTS & SIDE QUESTS</p>
+				<h1>My Ideas<span>.</span></h1>
+				<p class="intro">
+					A few things I enjoy making, finding and sharing. Pick a corner and have a look around.
+				</p>
+			</header>
+
+			<nav class="idea-grid" aria-label="Explore My Ideas">
+				{
+					sections.map((section, index) => (
+						<a class:list={['idea-card', `idea-card--${section.icon}`]} href={section.destination}>
+							<span class="card-topline">
+								<span class="card-icon" aria-hidden="true">
+									{section.icon === 'book' && (
+										<svg viewBox="0 0 32 32" fill="none">
+											<path d="M6 7.5A3.5 3.5 0 0 1 9.5 4H26v21H9.5A3.5 3.5 0 0 0 6 28V7.5Z" />
+											<path d="M6 7.5V28m4-19h11m-11 5h11m-11 5h7" />
+										</svg>
+									)}
+									{section.icon === 'game' && (
+										<svg viewBox="0 0 32 32" fill="none">
+											<path d="M10 10h12a6 6 0 0 1 5.8 4.5l1.3 5.1a3 3 0 0 1-4.9 3l-3.1-2.6h-8.2l-3.1 2.6a3 3 0 0 1-4.9-3l1.3-5.1A6 6 0 0 1 10 10Z" />
+											<path d="M11 14v6m-3-3h6m8-1h.01M24 18h.01" />
+										</svg>
+									)}
+									{section.icon === 'music' && (
+										<svg viewBox="0 0 32 32" fill="none">
+											<path d="M19 22V6l10-2v16" />
+											<path d="M19 10l10-2" />
+											<ellipse cx="15" cy="23" rx="4" ry="3" transform="rotate(-18 15 23)" />
+											<ellipse cx="25" cy="21" rx="4" ry="3" transform="rotate(-18 25 21)" />
+										</svg>
+									)}
+									{section.icon === 'movie' && (
+										<svg viewBox="0 0 32 32" fill="none">
+											<rect x="4" y="7" width="24" height="19" rx="3" />
+											<path d="m13 12 8 4.5-8 4.5v-9Z" />
+											<path d="M4 13h3m-3 7h3m18-7h3m-3 7h3M11 7v3m10-3v3m-10 16v3m10-3v3" />
+										</svg>
+									)}
+								</span>
+								<span class="card-index">0{index + 1}</span>
+							</span>
+							<span class="card-copy">
+								<span class="card-title">{section.title}</span>
+								<span class="card-description">{section.description}</span>
+							</span>
+							<span class="card-action">{section.action}<span aria-hidden="true">↗</span></span>
+						</a>
+					))
+				}
+			</nav>
+		</main>
+
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main {
+		box-sizing: border-box;
+		width: min(1080px, calc(100% - 3rem));
+		max-width: none;
+		padding-block: clamp(3.5rem, 9vh, 6rem) clamp(4rem, 10vh, 7rem);
+	}
+
+	.page-heading {
+		max-width: 42rem;
+		margin-bottom: clamp(2rem, 5vw, 3.5rem);
+	}
+
+	.eyebrow {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		margin: 0 0 1rem;
+		color: rgb(var(--gray));
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+	}
+
+	.heading-mark {
+		width: 0.55rem;
+		height: 0.55rem;
+		border-radius: 50%;
+		background: #d98267;
+		box-shadow: 0 0 0 4px rgba(217, 130, 103, 0.15);
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(3.5rem, 8vw, 6rem);
+		letter-spacing: -0.075em;
+		line-height: 0.98;
+	}
+
+	h1 span {
+		color: var(--accent);
+	}
+
+	.intro {
+		max-width: 34rem;
+		margin: 1.2rem 0 0;
+		color: rgb(var(--gray-dark));
+		font-size: clamp(1.05rem, 2vw, 1.2rem);
+		line-height: 1.65;
+	}
+
+	.idea-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem;
+	}
+
+	.idea-card {
+		--card-accent: #d98267;
+		--card-wash: rgba(217, 130, 103, 0.1);
+		box-sizing: border-box;
+		min-height: 220px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: 1.5rem;
+		padding: clamp(1.25rem, 3vw, 1.8rem);
+		border: 1px solid rgba(var(--gray), 25%);
+		border-radius: 1.25rem;
+		background:
+			radial-gradient(ellipse at 100% 0%, var(--card-wash), transparent 55%),
+			var(--surface);
+		box-shadow: 0 6px 24px rgba(var(--black), 4%);
+		color: rgb(var(--black));
+		text-decoration: none;
+		transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+	}
+
+	.idea-card--game {
+		--card-accent: #80946a;
+		--card-wash: rgba(128, 148, 106, 0.12);
+	}
+
+	.idea-card--music {
+		--card-accent: #9876bd;
+		--card-wash: rgba(152, 118, 189, 0.12);
+	}
+
+	.idea-card--movie {
+		--card-accent: #658da3;
+		--card-wash: rgba(101, 141, 163, 0.12);
+	}
+
+	.idea-card:hover {
+		transform: translateY(-4px);
+		border-color: color-mix(in srgb, var(--card-accent) 52%, transparent);
+		box-shadow: 0 16px 38px rgba(var(--black), 10%);
+		color: rgb(var(--black));
+	}
+
+	.idea-card:focus-visible {
+		outline: 3px solid var(--accent);
+		outline-offset: 4px;
+	}
+
+	.card-topline,
+	.card-action {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.card-icon {
+		width: 3rem;
+		height: 3rem;
+		display: grid;
+		place-items: center;
+		border-radius: 1rem;
+		background: var(--card-wash);
+		color: var(--card-accent);
+	}
+
+	.card-icon svg {
+		width: 1.7rem;
+		height: 1.7rem;
+		stroke: currentColor;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-width: 1.7;
+	}
+
+	.card-index {
+		color: rgb(var(--gray));
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+	}
+
+	.card-copy {
+		display: grid;
+		gap: 0.4rem;
+	}
+
+	.card-title {
+		font-size: clamp(1.55rem, 3vw, 1.9rem);
+		font-weight: 700;
+		letter-spacing: -0.04em;
+		line-height: 1.15;
+	}
+
+	.card-description {
+		max-width: 25rem;
+		color: rgb(var(--gray-dark));
+		font-size: 0.98rem;
+		line-height: 1.55;
+	}
+
+	.card-action {
+		justify-content: flex-start;
+		gap: 0.65rem;
+		color: var(--card-accent);
+		font-size: 0.88rem;
+		font-weight: 700;
+	}
+
+	.card-action span {
+		transition: transform 180ms ease;
+	}
+
+	.idea-card:hover .card-action span {
+		transform: translate(2px, -2px);
+	}
+
+	@media (max-width: 640px) {
+		main {
+			width: min(100% - 2rem, 34rem);
+			padding-block: 3rem 4rem;
+		}
+
+		.idea-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.idea-card {
+			min-height: 190px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.idea-card,
+		.card-action span {
+			transition: none;
+		}
+	}
+</style>
