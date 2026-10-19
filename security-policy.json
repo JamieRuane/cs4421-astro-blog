@@ -18,6 +18,7 @@
             ],
             "script-src": [
                 "'self'",
+                "'sha256-Fbp3C2J0eHsYrZQMhr0Tg4B4o3oLYwvR4TwwatdorBI='",
                 "'sha256-GyGC2D09Xr7dBpbgXmgORprXHuQawT4KdVKzkxbeT78='",
                 "'sha256-LhzmIbEDrBoSP57CCu6R63gU0KZyUluKrICLjlxTxZ4='",
                 "'sha256-NCIEyGOovtgztPTinDSxNOtS1hkk8ZcALiBIJkYq0Zw='",

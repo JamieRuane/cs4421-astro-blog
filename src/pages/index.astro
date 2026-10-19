@@ -2,6 +2,7 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
+import SiteSearch from '../components/SiteSearch.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 ---
 
@@ -32,6 +33,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 						<a class="primary-link" href="/my-ideas">Explore My Ideas <span aria-hidden="true">↗</span></a>
 						<a class="secondary-link" href="/games/">Play the Dino Game</a>
 					</div>
+					<SiteSearch variant="home" />
 				</div>
 
 				<div class="welcome-art" aria-hidden="true">
