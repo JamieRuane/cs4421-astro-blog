@@ -1,0 +1,92 @@
+---
+import { getCollection } from 'astro:content';
+import { buildSearchIndex } from '../search/search';
+
+interface Props {
+	variant?: 'home' | 'global';
+}
+
+const { variant = 'global' } = Astro.props;
+const posts = await getCollection('blog');
+const searchIndex = buildSearchIndex(
+	posts.map((post) => ({
+		id: post.id,
+		title: post.data.title,
+		description: post.data.description,
+	})),
+);
+const indexData = JSON.stringify(searchIndex);
+---
+
+{variant === 'home' ? (
+	<section class="site-search site-search-home" data-site-search data-search-index={indexData} aria-label="Search the site">
+		<label class="search-label" for="home-site-search">Find something on the site</label>
+		<div class="search-field">
+			<svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+				<circle cx="10.8" cy="10.8" r="6.5"></circle>
+				<path d="m16 16 4.2 4.2"></path>
+			</svg>
+			<input
+				id="home-site-search"
+				type="search"
+				autocomplete="off"
+				placeholder="Search blogs, games and more"
+				data-search-input
+				aria-controls="home-site-search-results"
+			/>
+			<button class="search-clear" type="button" data-search-clear aria-label="Clear search" hidden>
+				Clear
+			</button>
+		</div>
+		<p class="search-status" data-search-status aria-live="polite">Search blogs, games and sections.</p>
+		<ul class="search-results" id="home-site-search-results" data-search-results aria-label="Search results"></ul>
+	</section>
+) : (
+	<div class="site-search site-search-global" data-site-search data-search-index={indexData}>
+		<button class="search-open" type="button" data-search-open aria-haspopup="dialog" aria-label="Search the site">
+			<svg viewBox="0 0 24 24" aria-hidden="true">
+				<circle cx="10.8" cy="10.8" r="6.5"></circle>
+				<path d="m16 16 4.2 4.2"></path>
+			</svg>
+			<span>Search</span>
+			<kbd aria-hidden="true">/</kbd>
+		</button>
+		<dialog class="search-dialog" data-search-dialog aria-labelledby="site-search-title">
+			<div class="search-dialog-heading">
+				<div>
+					<p class="search-eyebrow">FIND YOUR WAY AROUND</p>
+					<h2 id="site-search-title">Search the site</h2>
+				</div>
+				<button class="search-close" type="button" data-search-close aria-label="Close search">
+					<span aria-hidden="true">×</span>
+				</button>
+			</div>
+			<label class="search-label" for="global-site-search">Search blogs, games and sections</label>
+			<div class="search-field">
+				<svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+					<circle cx="10.8" cy="10.8" r="6.5"></circle>
+					<path d="m16 16 4.2 4.2"></path>
+				</svg>
+				<input
+					id="global-site-search"
+					type="search"
+					autocomplete="off"
+					placeholder="Try “travel” or “Wordle”"
+					data-search-input
+					aria-controls="global-site-search-results"
+				/>
+				<button class="search-clear" type="button" data-search-clear aria-label="Clear search" hidden>
+					Clear
+				</button>
+			</div>
+			<p class="search-status" data-search-status aria-live="polite">Type to find a blog, game or section.</p>
+			<ul class="search-results" id="global-site-search-results" data-search-results aria-label="Search results"></ul>
+			<div class="search-dialog-footer">
+				<span>Use Tab to move through results</span>
+				<button type="button" data-search-close>Back to the site</button>
+			</div>
+		</dialog>
+	</div>
+)}
+
+<script src="../search/search-client.ts"></script>

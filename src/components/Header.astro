@@ -1,6 +1,7 @@
 ---
 import { SITE_TITLE } from '../consts';
 import HeaderLink from './HeaderLink.astro';
+import SiteSearch from './SiteSearch.astro';
 ---
 
 <header>
@@ -13,6 +14,7 @@ import HeaderLink from './HeaderLink.astro';
 			</HeaderLink>
 			<HeaderLink href="/about">My Place</HeaderLink>
 		</div>
+		<SiteSearch variant="global" />
 		<button id="theme-toggle" type="button" aria-label="Switch to dark mode">
 			<svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true" width="20" height="20">
 				<circle cx="12" cy="12" r="4"></circle>
