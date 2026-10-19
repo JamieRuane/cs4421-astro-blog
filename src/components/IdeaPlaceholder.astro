@@ -1,0 +1,214 @@
+---
+import BaseHead from './BaseHead.astro';
+import Footer from './Footer.astro';
+import Header from './Header.astro';
+import { SITE_TITLE } from '../consts';
+
+interface Props {
+	title: string;
+	description: string;
+	note: string;
+	kind: 'music' | 'movies';
+}
+
+const { title, description, note, kind } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`${title} | ${SITE_TITLE}`} description={description} />
+	</head>
+
+	<body>
+		<Header />
+		<main class:list={['placeholder', `placeholder--${kind}`]}>
+			<div class="art" aria-hidden="true">
+				{
+					kind === 'music' ? (
+						<svg viewBox="0 0 120 120" fill="none">
+							<circle class="art-disc" cx="60" cy="60" r="43" />
+							<circle class="art-ring" cx="60" cy="60" r="29" />
+							<circle class="art-ring" cx="60" cy="60" r="17" />
+							<circle class="art-center" cx="60" cy="60" r="6" />
+							<path class="art-note" d="M82 22v28m0-22 17-4v25" />
+							<ellipse class="art-note" cx="76" cy="52" rx="7" ry="5" transform="rotate(-18 76 52)" />
+							<ellipse class="art-note" cx="93" cy="49" rx="7" ry="5" transform="rotate(-18 93 49)" />
+						</svg>
+					) : (
+						<svg viewBox="0 0 120 120" fill="none">
+							<rect class="art-frame" x="15" y="23" width="90" height="74" rx="12" />
+							<path class="art-side" d="M31 24v72m58-72v72" />
+							<path class="art-side" d="M16 40h15m-15 19h15m-15 19h15m58-38h15M89 59h15m-15 19h15" />
+							<path class="art-play" d="m51 42 28 18-28 18V42Z" />
+						</svg>
+					)
+				}
+			</div>
+
+			<div class="copy">
+				<p class="eyebrow">{kind === 'music' ? 'SOUNDS GOOD' : 'LIGHTS, CAMERA, LATER'}</p>
+				<h1>{title}<span>.</span></h1>
+				<p class="description">{description}</p>
+				<div class="note">
+					<span class="note-mark" aria-hidden="true"></span>
+					<p>{note}</p>
+				</div>
+				<a class="back-link" href="/my-ideas/">← Back to My Ideas</a>
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.placeholder {
+		--placeholder-accent: #9876bd;
+		--placeholder-wash: rgba(152, 118, 189, 0.16);
+		box-sizing: border-box;
+		width: min(1080px, calc(100% - 3rem));
+		max-width: none;
+		min-height: min(680px, calc(100svh - 190px));
+		display: grid;
+		grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
+		align-items: center;
+		gap: clamp(2rem, 8vw, 7rem);
+		padding-block: clamp(3rem, 8vh, 6rem);
+	}
+
+	.placeholder--movies {
+		--placeholder-accent: #658da3;
+		--placeholder-wash: rgba(101, 141, 163, 0.16);
+	}
+
+	.art {
+		width: min(100%, 390px);
+		aspect-ratio: 1;
+		display: grid;
+		place-items: center;
+		justify-self: center;
+		border: 1px solid rgba(var(--gray), 23%);
+		border-radius: 50%;
+		background: radial-gradient(circle, var(--placeholder-wash), transparent 70%);
+	}
+
+	.art svg {
+		width: 76%;
+		overflow: visible;
+	}
+
+	.art-disc,
+	.art-frame {
+		fill: var(--surface);
+		stroke: var(--placeholder-accent);
+		stroke-width: 2;
+	}
+
+	.art-ring,
+	.art-side,
+	.art-note {
+		stroke: var(--placeholder-accent);
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-width: 2;
+	}
+
+	.art-center {
+		fill: var(--placeholder-accent);
+	}
+
+	.art-play {
+		fill: var(--placeholder-accent);
+	}
+
+	.copy {
+		max-width: 36rem;
+	}
+
+	.eyebrow {
+		margin: 0 0 0.75rem;
+		color: var(--placeholder-accent);
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.16em;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(3.5rem, 8vw, 6rem);
+		letter-spacing: -0.075em;
+		line-height: 0.98;
+	}
+
+	h1 span {
+		color: var(--placeholder-accent);
+	}
+
+	.description {
+		margin: 1.25rem 0 0;
+		color: rgb(var(--gray-dark));
+		font-size: clamp(1.05rem, 2vw, 1.2rem);
+		line-height: 1.65;
+	}
+
+	.note {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.8rem;
+		margin-top: 1.75rem;
+		padding: 1rem 1.1rem;
+		border: 1px solid rgba(var(--gray), 22%);
+		border-radius: 1rem;
+		background: rgba(var(--gray-light), 35%);
+	}
+
+	.note-mark {
+		width: 0.55rem;
+		height: 0.55rem;
+		flex: 0 0 auto;
+		margin-top: 0.55rem;
+		border-radius: 50%;
+		background: var(--placeholder-accent);
+	}
+
+	.note p {
+		margin: 0;
+		color: rgb(var(--gray-dark));
+		font-size: 0.95rem;
+		line-height: 1.55;
+	}
+
+	.back-link {
+		display: inline-flex;
+		margin-top: 1.75rem;
+		color: rgb(var(--black));
+		font-size: 0.95rem;
+		font-weight: 700;
+		text-decoration-color: rgba(var(--gray), 55%);
+		text-underline-offset: 0.3em;
+	}
+
+	.back-link:hover {
+		color: var(--placeholder-accent);
+	}
+
+	.back-link:focus-visible {
+		outline: 3px solid var(--accent);
+		outline-offset: 4px;
+	}
+
+	@media (max-width: 700px) {
+		.placeholder {
+			width: min(100% - 2rem, 36rem);
+			min-height: auto;
+			grid-template-columns: 1fr;
+			gap: 2rem;
+			padding-block: 3rem 4rem;
+		}
+
+		.art {
+			width: min(68vw, 270px);
+		}
+	}
+
+</style>

@@ -8,7 +8,9 @@ import HeaderLink from './HeaderLink.astro';
 		<h2><a href="/">{SITE_TITLE}</a></h2>
 		<div class="internal-links">
 			<HeaderLink href="/">Home</HeaderLink>
-			<HeaderLink href="/blog">My Ideas</HeaderLink>
+			<HeaderLink href="/my-ideas" activePaths={['/blog', '/games', '/music', '/movies']}>
+				My Ideas
+			</HeaderLink>
 			<HeaderLink href="/about">My Place</HeaderLink>
 		</div>
 		<button id="theme-toggle" type="button" aria-label="Switch to dark mode">
