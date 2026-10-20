@@ -5,7 +5,27 @@ Production site: <https://d2nod46fx08aeg.cloudfront.net/>
 The Astro application is built as a static site and deployed to the existing
 Amazon S3 bucket behind CloudFront. AWS CDK manages the site and infrastructure.
 CloudFront sends `/api/*` requests to an API Gateway HTTP API, which invokes
-the weather, feedback, or health Lambda handler.
+the weather, feedback, health, or Movies Lambda handler.
+
+## Movies API setup
+
+The static Movies page requests the same-origin `/api/movies` endpoint. The
+endpoint calls TMDB from a Lambda function; the browser never receives the
+TMDB access token. Before deploying the Movies feature, create an AWS Secrets
+Manager secret named `personal-site/tmdb-api-read-access-token` containing the
+TMDB API Read Access Token. The Movies Lambda receives permission to read only
+that secret. Do not put the token in Astro variables, source files, workflow
+variables, query strings, or logs.
+
+Local development may use `TMDB_API_READ_ACCESS_TOKEN` in the developer's
+environment. Do not commit a local environment file containing the token.
+The CI build validates the generated Movies route, attribution, logo, poster
+image origin, and same-origin API path; it does not contact TMDB or verify the
+production secret.
+
+TMDB attribution is displayed on the Movies page using the approved logo and
+required disclaimer. Movie data is not used with AI or chatbot features.
+Review TMDB's current API terms before changing how the data is used.
 
 ## First successful production deployment
 
@@ -119,6 +139,10 @@ Historical failures before the OIDC correction do not need to be rerun.
   effective CSP directives and hashes, on both static and API responses.
 - [ ] Verify API caching behavior with deployed requests/headers; the
   deployment's health check does not test caching.
+- [ ] After the Movies feature is deployed, verify popular movies, title
+  search, genre/year filters, pagination, and empty/error states at
+  `/movies/`; confirm `/api/movies` does not expose the token and that CloudFront
+  does not cache API responses.
 - [ ] Confirm representative blog routes, My Place, and the other static
   sections in a browser.
 

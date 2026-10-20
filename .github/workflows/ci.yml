@@ -34,6 +34,9 @@ jobs:
       - name: Build production site
         run: npm run build
 
+      - name: Validate Movies page and TMDB attribution
+        run: npm run movies:validate
+
       - name: Synthesize infrastructure
         run: npx cdk synth StaticSiteStack --strict
 

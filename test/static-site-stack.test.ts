@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { StaticSiteStack } from '../cdk/lib/static-site-stack';
 
 describe('StaticSiteStack', () => {
-	it('keeps the static origin and adds three throttled API routes with retained logs', () => {
+	it('keeps the static origin and adds throttled API routes with retained logs', () => {
 		const app = new cdk.App();
 		const stack = new StaticSiteStack(app, 'TestStaticSiteStack', {
 			siteAssetPath: 'public',
@@ -15,13 +15,14 @@ describe('StaticSiteStack', () => {
 		template.resourceCountIs('AWS::S3::Bucket', 1);
 		template.resourceCountIs('AWS::CloudFront::Distribution', 1);
 		template.resourceCountIs('AWS::ApiGatewayV2::Api', 1);
-		template.resourceCountIs('AWS::ApiGatewayV2::Route', 3);
-		template.resourceCountIs('AWS::Logs::LogGroup', 4);
+		template.resourceCountIs('AWS::ApiGatewayV2::Route', 4);
+		template.resourceCountIs('AWS::Logs::LogGroup', 5);
 		template.hasResourceProperties('AWS::Logs::LogGroup', { RetentionInDays: 7 });
 		for (const functionName of [
 			'personal-site-weather',
 			'personal-site-feedback',
 			'personal-site-health',
+			'personal-site-movies',
 		]) {
 			template.hasResourceProperties('AWS::Lambda::Function', {
 				FunctionName: functionName,
@@ -37,6 +38,21 @@ describe('StaticSiteStack', () => {
 		template.hasResourceProperties('AWS::ApiGatewayV2::Route', { RouteKey: 'GET /api/weather' });
 		template.hasResourceProperties('AWS::ApiGatewayV2::Route', { RouteKey: 'POST /api/feedback' });
 		template.hasResourceProperties('AWS::ApiGatewayV2::Route', { RouteKey: 'GET /api/health' });
+		template.hasResourceProperties('AWS::ApiGatewayV2::Route', { RouteKey: 'GET /api/movies' });
+		const policies = Object.values(template.findResources('AWS::IAM::Policy'));
+		const secretPolicy = policies.find((policy) =>
+			JSON.stringify(policy).includes('secretsmanager:GetSecretValue'),
+		);
+		expect(secretPolicy).toBeDefined();
+		const policyDocument = secretPolicy?.Properties.PolicyDocument;
+		const secretStatement = policyDocument?.Statement.find((statement: {
+			Action: string[];
+		}) => statement.Action.includes('secretsmanager:GetSecretValue'));
+		expect(secretStatement).toBeDefined();
+		expect(JSON.stringify(secretStatement?.Resource)).toContain(
+			'personal-site/tmdb-api-read-access-token',
+		);
+		expect(secretStatement?.Resource).not.toBe('*');
 		const buckets = template.findResources('AWS::S3::Bucket');
 		const bucket = Object.values(buckets)[0];
 		expect(bucket.DeletionPolicy).toBe('Delete');
