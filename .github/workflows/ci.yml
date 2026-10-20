@@ -34,5 +34,8 @@ jobs:
       - name: Build production site
         run: npm run build
 
+      - name: Synthesize infrastructure
+        run: npx cdk synth StaticSiteStack --strict
+
       - name: Validate security policy
         run: npm run security:validate

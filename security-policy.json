@@ -41,8 +41,7 @@
                 "'self'"
             ],
             "connect-src": [
-                "'self'",
-                "https://api.open-meteo.com"
+                "'self'"
             ]
         },
         "X-Content-Type-Options": "nosniff",

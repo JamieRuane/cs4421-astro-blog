@@ -4,13 +4,16 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, fontProviders } from 'astro/config';
 
-import node from '@astrojs/node';
+import { localApiPlugin } from './scripts/local-api-plugin.mjs';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://example.com',
-  output: 'server',
+  site: 'https://d2nod46fx08aeg.cloudfront.net/',
+  output: 'static',
   integrations: [mdx(), sitemap()],
+  vite: {
+    plugins: [localApiPlugin()],
+  },
 
   markdown: {
       syntaxHighlight: 'prism',
@@ -40,8 +43,4 @@ export default defineConfig({
           },
       },
 	],
-
-  adapter: node({
-    mode: 'standalone',
-  }),
 });

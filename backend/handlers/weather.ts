@@ -1,6 +1,4 @@
-import type { APIRoute } from 'astro';
-
-export const prerender = false;
+import { jsonResponse, type HttpApiEvent, type HttpApiResponse } from './http.js';
 
 const latitude = 52.5997;
 const longitude = -8.9756;
@@ -17,7 +15,7 @@ type OpenMeteoResponse = {
 	current_units?: Record<string, string>;
 };
 
-export const GET: APIRoute = async () => {
+export async function handler(_event: HttpApiEvent): Promise<HttpApiResponse> {
 	const url = new URL('https://api.open-meteo.com/v1/forecast');
 	url.searchParams.set('latitude', String(latitude));
 	url.searchParams.set('longitude', String(longitude));
@@ -40,26 +38,21 @@ export const GET: APIRoute = async () => {
 			throw new Error(`Open-Meteo returned HTTP ${response.status}`);
 		}
 
-		const data: OpenMeteoResponse = await response.json();
+		const data = (await response.json()) as OpenMeteoResponse;
 		if (!data.current) {
 			throw new Error('Open-Meteo response did not include current weather data');
 		}
 
-		return new Response(
-			JSON.stringify({
+		return jsonResponse(
+			{
 				location: 'Askeaton, County Limerick',
 				latitude,
 				longitude,
 				current: data.current,
 				current_units: data.current_units,
-			}),
-			{
-				status: 200,
-				headers: {
-					'Content-Type': 'application/json; charset=utf-8',
-					'Cache-Control': 'public, max-age=600, s-maxage=1800, stale-while-revalidate=3600',
-				},
 			},
+			200,
+			'public, max-age=600, s-maxage=1800, stale-while-revalidate=3600',
 		);
 	} catch (error) {
 		const reason = error instanceof Error ? error.message : 'Unknown upstream error';
@@ -69,15 +62,9 @@ export const GET: APIRoute = async () => {
 			timestamp: new Date().toISOString(),
 			reason,
 		}));
-		return new Response(
-			JSON.stringify({ status: 'error', error: 'Weather data is temporarily unavailable.' }),
-			{
-				status: 502,
-				headers: {
-					'Content-Type': 'application/json; charset=utf-8',
-					'Cache-Control': 'no-store',
-				},
-			},
+		return jsonResponse(
+			{ status: 'error', error: 'Weather data is temporarily unavailable.' },
+			502,
 		);
 	}
-};
+}

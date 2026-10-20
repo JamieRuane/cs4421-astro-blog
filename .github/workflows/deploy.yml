@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -25,11 +28,25 @@ jobs:
       - name: Build Astro site
         run: npm run build
 
-      - name: Configure AWS credentials
+      - name: Validate security policy
+        run: npm run security:validate
+
+      - name: Validate deployment role configuration
+        env:
+          AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          if [ -z "$AWS_DEPLOY_ROLE_ARN" ]; then
+            echo "Repository variable AWS_DEPLOY_ROLE_ARN must reference the GitHub OIDC deployment role."
+            exit 1
+          fi
+
+      - name: Synthesize deployment stack
+        run: npx cdk synth StaticSiteStack --strict
+
+      - name: Configure AWS credentials with GitHub OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: eu-west-1
 
       - name: Deploy with AWS CDK
@@ -48,29 +65,58 @@ jobs:
 
       - name: Health check
         env:
-          HEALTH_URL: ${{ steps.cloudfront.outputs.url }}/health.json
+          SITE_URL: ${{ steps.cloudfront.outputs.url }}
         run: |
-          echo "Checking $HEALTH_URL"
+          check_json_status() {
+            local url="$1"
+            local expected_status="$2"
+            local response=""
 
-          for i in {1..10}; do
-            RESPONSE=$(curl --silent --show-error --fail "$HEALTH_URL") && break
+            for attempt in {1..10}; do
+              response=$(curl --silent --show-error --fail "$url") && break
+              echo "Health check attempt $attempt failed for $url. Retrying..."
+              sleep 10
+            done
 
-            echo "Health check attempt $i failed. Retrying..."
-            sleep 10
-          done
+            if [ -z "$response" ]; then
+              echo "Health check failed for $url"
+              return 1
+            fi
 
-          if [ -z "$RESPONSE" ]; then
-            echo "Health check failed"
-            exit 1
-          fi
+            actual_status=$(echo "$response" | jq -r '.status')
+            if [ "$actual_status" != "$expected_status" ]; then
+              echo "Unexpected status from $url: $actual_status"
+              return 1
+            fi
+          }
 
-          echo "Response: $RESPONSE"
+          check_json_status "$SITE_URL/health.json" "healthy"
+          check_json_status "$SITE_URL/api/health" "ok"
 
-          STATUS=$(echo "$RESPONSE" | jq -r '.status')
+      - name: Validate deployed security headers
+        env:
+          SITE_URL: ${{ steps.cloudfront.outputs.url }}
+        run: |
+          check_security_headers() {
+            local url="$1"
+            local headers
+            headers=$(curl --silent --show-error --fail --dump-header - --output /dev/null "$url")
 
-          if [ "$STATUS" != "healthy" ]; then
-            echo "Health endpoint returned an unexpected status: $STATUS"
-            exit 1
-          fi
+            for header in \
+              "content-security-policy:.*default-src 'self'" \
+              "x-content-type-options: nosniff" \
+              "x-frame-options: DENY" \
+              "referrer-policy: strict-origin-when-cross-origin" \
+              "permissions-policy: camera=\\(\\), geolocation=\\(\\), microphone=\\(\\)" \
+              "strict-transport-security: max-age=31536000"; do
+              if ! echo "$headers" | grep -Eiq "^$header"; then
+                echo "Expected deployed security header was missing from $url: $header"
+                return 1
+              fi
+            done
+          }
 
-          echo "Health check passed"
+          check_security_headers "$SITE_URL/"
+          check_security_headers "$SITE_URL/api/health"
+
+          echo "Deployed security headers are present."
