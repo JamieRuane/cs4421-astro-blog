@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted on 2026-10-20.
+Accepted and deployed to production on 2026-10-20.
 
 ## Context
 
@@ -30,6 +30,22 @@ CloudFront enforces the response security headers from `security-policy.json`.
 The feedback handler validates submissions and returns the existing
 acknowledgement; it does not store submissions or log their personal contents.
 Provider credentials for future integrations must remain server-side.
+
+## Production deployment
+
+The first successful production deployment completed on 20 October 2026 at
+commit [`32c3235`](https://github.com/JamieRuane/cs4421-astro-blog/commit/32c323565f51e3277711da6e34d8690cf0332087)
+through [Deploy to AWS run #29](https://github.com/JamieRuane/cs4421-astro-blog/actions/runs/39410124309).
+The deployment workflow successfully built and deployed the site, checked
+`/health.json` and `/api/health`, and verified its configured security-header
+checks on static and API responses. CI run #95 for the same commit also passed
+lint, unit tests, production build, CDK synthesis, and CSP validation.
+
+This confirms the initial deployment path, not every page or API behavior.
+Manual verification of search, games, weather, feedback, and API caching is
+still tracked in the [deployment verification checklist](../deployment-oidc.md).
+Keep [architecture audit and acceptance issue #54](https://github.com/JamieRuane/cs4421-astro-blog/issues/54)
+open until those remaining checks are complete.
 
 ## Consequences
 

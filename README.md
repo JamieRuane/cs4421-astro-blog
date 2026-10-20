@@ -1,63 +1,55 @@
-# Astro Starter Kit: Blog
+# Jamie Ruane's personal website
+
+This is my personal website and blog, built with Astro. It brings together my
+writing, games, music and movie discovery pages, and My Place.
+
+**Live site:** [d2nod46fx08aeg.cloudfront.net](https://d2nod46fx08aeg.cloudfront.net/)
+
+## How it is deployed
+
+Astro generates static pages, which are hosted in Amazon S3 and delivered by
+CloudFront. AWS CDK manages the infrastructure. The dynamic `/api/*` routes
+are served by an API Gateway HTTP API and AWS Lambda. GitHub Actions assumes an
+AWS IAM role using OIDC for deployments; the workflow does not use long-lived
+AWS access keys.
+
+The first successful production deployment completed on 20 October 2026:
+[Deploy to AWS run #29](https://github.com/JamieRuane/cs4421-astro-blog/actions/runs/39410124309),
+for commit [`32c3235`](https://github.com/JamieRuane/cs4421-astro-blog/commit/32c323565f51e3277711da6e34d8690cf0332087).
+The deployment took about four minutes. See the
+[deployment guide](./docs/deployment-oidc.md) for the OIDC setup, deployment
+process, and verification checklist.
+
+## Run locally
+
+From the Astro application directory:
 
 ```sh
-npm create astro@latest -- --template blog
+npm ci
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Useful checks:
 
-Features:
+```sh
+npm run lint
+npm run test:unit
+npm run build
+npx cdk synth StaticSiteStack --strict
+npm run security:validate
+```
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+## Project structure
 
 ```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+src/
+  components/    Shared page components
+  content/blog/  Blog posts
+  pages/         Static pages and generated routes
+backend/         Lambda handlers for dynamic API routes
+cdk/             AWS infrastructure
+docs/             Deployment and architecture documentation
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+For more detail on the hosting decision, see
+[ADR-001](./docs/adr/ADR-001-static-to-ssr.md).
