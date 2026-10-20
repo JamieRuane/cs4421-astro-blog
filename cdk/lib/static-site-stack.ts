@@ -9,6 +9,7 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 
@@ -90,6 +91,11 @@ export class StaticSiteStack extends cdk.Stack {
 			retention: logs.RetentionDays.ONE_WEEK,
 			removalPolicy: cdk.RemovalPolicy.DESTROY,
 		});
+		const moviesLogGroup = new logs.LogGroup(this, 'MoviesHandlerLogs', {
+			logGroupName: '/aws/lambda/personal-site-movies',
+			retention: logs.RetentionDays.ONE_WEEK,
+			removalPolicy: cdk.RemovalPolicy.DESTROY,
+		});
 		const accessLogFormat = apigateway.AccessLogFormat.custom(JSON.stringify({
 			requestId: '$context.requestId',
 			routeKey: '$context.routeKey',
@@ -125,6 +131,24 @@ export class StaticSiteStack extends cdk.Stack {
 			memorySize: 128,
 			logGroup: healthLogGroup,
 		});
+		const tmdbToken = secretsmanager.Secret.fromSecretNameV2(
+			this,
+			'TmdbApiReadAccessToken',
+			'personal-site/tmdb-api-read-access-token',
+		);
+		const moviesHandler = new nodejs.NodejsFunction(this, 'MoviesHandler', {
+			entry: resolve(process.cwd(), 'backend/handlers/movies.ts'),
+			handler: 'handler',
+			runtime: lambda.Runtime.NODEJS_22_X,
+			functionName: 'personal-site-movies',
+			timeout: cdk.Duration.seconds(12),
+			memorySize: 256,
+			logGroup: moviesLogGroup,
+			environment: {
+				TMDB_API_SECRET_ARN: tmdbToken.secretArn,
+			},
+		});
+		tmdbToken.grantRead(moviesHandler);
 
 		const httpApi = new apigatewayv2.HttpApi(this, 'SiteApi', {
 			apiName: 'personal-site-api',
@@ -144,6 +168,11 @@ export class StaticSiteStack extends cdk.Stack {
 			path: '/api/health',
 			methods: [apigatewayv2.HttpMethod.GET],
 			integration: new integrations.HttpLambdaIntegration('HealthIntegration', healthHandler),
+		});
+		httpApi.addRoutes({
+			path: '/api/movies',
+			methods: [apigatewayv2.HttpMethod.GET],
+			integration: new integrations.HttpLambdaIntegration('MoviesIntegration', moviesHandler),
 		});
 		new apigatewayv2.HttpStage(this, 'ApiStage', {
 			httpApi,

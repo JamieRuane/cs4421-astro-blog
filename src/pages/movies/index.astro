@@ -1,10 +1,477 @@
 ---
-import IdeaPlaceholder from '../../components/IdeaPlaceholder.astro';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { SITE_TITLE } from '../../consts';
 ---
 
-<IdeaPlaceholder
-	kind="movies"
-	title="Movies"
-	description="A place for films worth revisiting, new favourites and stories that linger after the credits."
-	note="I’m gathering the films I’d recommend to a friend. The watchlist is taking shape, so check back soon."
-/>
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead
+			title={`Movies | ${SITE_TITLE}`}
+			description="Browse popular films or search the movie catalogue by title, genre and release year."
+		/>
+	</head>
+
+	<body>
+		<Header />
+		<main class="movies-page">
+			<header class="movies-heading">
+				<p class="eyebrow"><span class="heading-mark"></span> THE NEXT THING TO WATCH</p>
+				<h1>Movies<span>.</span></h1>
+				<p class="intro">
+					Find a familiar favourite or follow a new story. Search the catalogue or start with what’s popular.
+				</p>
+			</header>
+
+			<form class="movie-filters" data-movie-search>
+				<label class="title-filter">
+					<span>Search by title</span>
+					<input
+						name="query"
+						type="search"
+						maxlength="100"
+						placeholder="Try a title, like The Grand Budapest Hotel"
+						autocomplete="off"
+					/>
+				</label>
+				<label>
+					<span>Genre</span>
+					<select name="genre">
+						<option value="">Any genre</option>
+					</select>
+				</label>
+				<label>
+					<span>Release year</span>
+					<input
+						name="year"
+						type="number"
+						min="1888"
+						max={new Date().getFullYear() + 10}
+						inputmode="numeric"
+						placeholder="Any year"
+					/>
+				</label>
+				<div class="filter-actions">
+					<button class="search-button" type="submit">Find films</button>
+					<button class="clear-button" type="reset">Clear</button>
+				</div>
+			</form>
+
+			<p class="result-status" data-movie-status role="status" aria-live="polite">
+				Loading popular films…
+			</p>
+			<section class="movie-grid" data-movie-results aria-label="Movies"></section>
+			<button class="load-more" data-movie-more type="button" hidden>Show more films</button>
+
+			<section class="tmdb-credit" aria-labelledby="tmdb-credit-heading">
+				<h2 id="tmdb-credit-heading">Credits</h2>
+				<a
+					class="tmdb-logo-link"
+					href="https://www.themoviedb.org/"
+					target="_blank"
+					rel="noopener noreferrer"
+					aria-label="The Movie Database (TMDB)"
+				>
+					<img src="/tmdb-blue-long.svg" alt="The Movie Database (TMDB)" width="245" height="18" />
+				</a>
+				<p>
+					This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
+				</p>
+				<p>Movie information on this page is not used with AI or chatbot features.</p>
+			</section>
+			<a class="back-link" href="/my-ideas/">← Back to My Ideas</a>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<script>
+	import '../../movies/movies-client';
+</script>
+
+<style>
+	.movies-page {
+		box-sizing: border-box;
+		width: min(1120px, calc(100% - 3rem));
+		max-width: none;
+		padding-block: clamp(3.5rem, 8vh, 5.5rem) 5rem;
+	}
+
+	.movies-heading {
+		max-width: 42rem;
+		margin-bottom: clamp(2rem, 5vw, 3rem);
+	}
+
+	.eyebrow {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		margin: 0 0 1rem;
+		color: rgb(var(--gray));
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+	}
+
+	.heading-mark {
+		width: 0.55rem;
+		height: 0.55rem;
+		border-radius: 50%;
+		background: #658da3;
+		box-shadow: 0 0 0 4px rgba(101, 141, 163, 0.15);
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(3.5rem, 8vw, 6rem);
+		letter-spacing: -0.075em;
+		line-height: 0.98;
+	}
+
+	h1 span {
+		color: #658da3;
+	}
+
+	.intro {
+		max-width: 34rem;
+		margin: 1.2rem 0 0;
+		color: rgb(var(--gray-dark));
+		font-size: clamp(1.05rem, 2vw, 1.2rem);
+		line-height: 1.65;
+	}
+
+	.movie-filters {
+		display: grid;
+		grid-template-columns: minmax(16rem, 1.5fr) minmax(10rem, 0.8fr) minmax(8rem, 0.6fr) auto;
+		align-items: end;
+		gap: 0.85rem;
+		padding: clamp(1rem, 3vw, 1.35rem);
+		border: 1px solid rgba(var(--gray), 25%);
+		border-radius: 1.1rem;
+		background: var(--surface);
+		box-shadow: 0 8px 28px rgba(var(--black), 5%);
+	}
+
+	.movie-filters label {
+		display: grid;
+		gap: 0.38rem;
+		color: rgb(var(--gray-dark));
+		font-size: 0.78rem;
+		font-weight: 700;
+	}
+
+	.movie-filters input,
+	.movie-filters select {
+		box-sizing: border-box;
+		width: 100%;
+		min-height: 2.85rem;
+		border: 1px solid rgba(var(--gray), 35%);
+		border-radius: 0.65rem;
+		padding: 0.55rem 0.7rem;
+		background: var(--surface);
+		color: rgb(var(--black));
+		font: inherit;
+		font-size: 0.88rem;
+	}
+
+	.movie-filters input::placeholder {
+		color: rgb(var(--gray));
+		opacity: 0.85;
+	}
+
+	.movie-filters input:focus-visible,
+	.movie-filters select:focus-visible,
+	button:focus-visible,
+	.back-link:focus-visible,
+	.tmdb-logo-link:focus-visible {
+		outline: 3px solid var(--accent);
+		outline-offset: 3px;
+	}
+
+	.filter-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+	}
+
+	.search-button,
+	.load-more {
+		min-height: 2.85rem;
+		border: 1px solid #456c80;
+		border-radius: 0.65rem;
+		padding: 0.55rem 1rem;
+		background: #456c80;
+		color: #fff;
+		font: inherit;
+		font-size: 0.86rem;
+		font-weight: 700;
+		cursor: pointer;
+		transition: background-color 160ms ease, transform 160ms ease;
+	}
+
+	.search-button:hover,
+	.load-more:hover {
+		transform: translateY(-1px);
+		background: #36576a;
+	}
+
+	.search-button:disabled,
+	.load-more:disabled {
+		cursor: wait;
+		opacity: 0.7;
+		transform: none;
+	}
+
+	.clear-button {
+		min-height: 2.85rem;
+		border: 0;
+		padding: 0.5rem;
+		background: transparent;
+		color: rgb(var(--gray-dark));
+		font: inherit;
+		font-size: 0.82rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+
+	.result-status {
+		min-height: 1.5em;
+		margin: 1.6rem 0 0.9rem;
+		color: rgb(var(--gray));
+		font-size: 0.88rem;
+	}
+
+	.result-status[data-error='true'] {
+		color: #a73b3b;
+	}
+
+	.movie-grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: clamp(0.8rem, 2vw, 1.2rem);
+	}
+
+	.movie-card {
+		min-width: 0;
+		overflow: hidden;
+		border: 1px solid rgba(var(--gray), 23%);
+		border-radius: 1rem;
+		background: var(--surface);
+		box-shadow: 0 5px 20px rgba(var(--black), 5%);
+	}
+
+	.movie-poster {
+		display: grid;
+		width: 100%;
+		aspect-ratio: 2 / 3;
+		place-items: center;
+		overflow: hidden;
+		background:
+			radial-gradient(ellipse at 70% 20%, rgba(101, 141, 163, 0.3), transparent 55%),
+			rgb(var(--gray-light));
+		color: rgb(var(--gray-dark));
+	}
+
+	.movie-poster img {
+		width: 100%;
+		height: 100%;
+		border-radius: 0;
+		object-fit: cover;
+	}
+
+	.poster-placeholder {
+		padding: 1rem;
+		font-size: 0.8rem;
+		text-align: center;
+	}
+
+	.movie-copy {
+		display: grid;
+		gap: 0.6rem;
+		padding: 0.9rem;
+	}
+
+	.movie-title {
+		margin: 0;
+		font-size: 1rem;
+		letter-spacing: -0.025em;
+	}
+
+	.movie-title a {
+		color: rgb(var(--black));
+		text-decoration-color: rgba(var(--gray), 40%);
+		text-underline-offset: 0.2em;
+	}
+
+	.movie-title a:hover {
+		color: #456c80;
+	}
+
+	.movie-meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem 0.65rem;
+		color: rgb(var(--gray));
+		font-size: 0.75rem;
+	}
+
+	.movie-rating {
+		color: rgb(var(--gray-dark));
+		font-weight: 700;
+	}
+
+	.movie-overview {
+		display: -webkit-box;
+		overflow: hidden;
+		margin: 0;
+		color: rgb(var(--gray-dark));
+		font-size: 0.8rem;
+		line-height: 1.5;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 4;
+	}
+
+	.movie-genres {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.movie-genres li {
+		border-radius: 999px;
+		padding: 0.18rem 0.5rem;
+		background: rgba(101, 141, 163, 0.12);
+		color: rgb(var(--gray-dark));
+		font-size: 0.68rem;
+		line-height: 1.4;
+	}
+
+	.load-more {
+		display: block;
+		margin: 1.75rem auto 0;
+	}
+
+	.load-more[hidden] {
+		display: none;
+	}
+
+	.tmdb-credit {
+		display: grid;
+		justify-items: start;
+		gap: 0.55rem;
+		margin-top: 3.5rem;
+		border: 1px solid rgba(var(--gray), 22%);
+		border-radius: 1rem;
+		padding: 1.2rem;
+		background: var(--surface);
+	}
+
+	.tmdb-credit h2 {
+		margin: 0;
+		color: rgb(var(--gray));
+		font-size: 0.7rem;
+		letter-spacing: 0.13em;
+		text-transform: uppercase;
+	}
+
+	.tmdb-logo-link {
+		display: inline-flex;
+		align-items: center;
+		border-radius: 0.25rem;
+		padding: 0.3rem;
+		background: #fff;
+	}
+
+	.tmdb-logo-link img {
+		display: block;
+		width: min(245px, 58vw);
+		height: auto;
+		border-radius: 0;
+	}
+
+	.tmdb-credit p {
+		max-width: 52rem;
+		margin: 0;
+		color: rgb(var(--gray-dark));
+		font-size: 0.8rem;
+		line-height: 1.5;
+	}
+
+	.back-link {
+		display: inline-flex;
+		margin-top: 1.6rem;
+		color: rgb(var(--black));
+		font-size: 0.9rem;
+		font-weight: 700;
+		text-decoration-color: rgba(var(--gray), 55%);
+		text-underline-offset: 0.3em;
+	}
+
+	.back-link:hover {
+		color: #456c80;
+	}
+
+	@media (max-width: 900px) {
+		.movie-filters {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		}
+
+		.title-filter {
+			grid-column: 1 / -1;
+		}
+
+		.filter-actions {
+			align-self: end;
+		}
+
+		.movie-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 620px) {
+		.movies-page {
+			width: min(100% - 2rem, 38rem);
+			padding-block: 3rem 4rem;
+		}
+
+		.movie-filters {
+			grid-template-columns: 1fr;
+		}
+
+		.title-filter {
+			grid-column: auto;
+		}
+
+		.filter-actions {
+			justify-content: flex-start;
+		}
+
+		.movie-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.movie-copy {
+			padding: 0.75rem;
+		}
+	}
+
+	@media (max-width: 360px) {
+		.movie-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.search-button,
+		.load-more {
+			transition: none;
+		}
+	}
+</style>

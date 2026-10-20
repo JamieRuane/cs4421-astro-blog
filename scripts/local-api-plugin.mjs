@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 
 const handlers = {
 	'GET /api/weather': '/backend/handlers/weather.ts',
+	'GET /api/movies': '/backend/handlers/movies.ts',
 	'POST /api/feedback': '/backend/handlers/feedback.ts',
 	'GET /api/health': '/backend/handlers/health.ts',
 };
@@ -44,6 +45,7 @@ export function localApiPlugin() {
 						version: '2.0',
 						routeKey: key,
 						rawPath: url.pathname,
+						queryStringParameters: Object.fromEntries(url.searchParams.entries()),
 						headers: request.headers,
 						body: body || undefined,
 						isBase64Encoded: false,

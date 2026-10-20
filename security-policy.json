@@ -35,7 +35,8 @@
                 "'sha256-sfUey2lfTXEOI+Gk2ln1vQ1UUbP6vl9lcTZBFH5MRHQ='"
             ],
             "img-src": [
-                "'self'"
+                "'self'",
+                "https://image.tmdb.org"
             ],
             "font-src": [
                 "'self'"
