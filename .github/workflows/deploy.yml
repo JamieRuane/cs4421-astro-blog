@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-
+  workflow_dispatch:
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -41,8 +41,16 @@ jobs:
           fi
 
       - name: Synthesize deployment stack
-        run: npx cdk synth StaticSiteStack --strict
+        run: npx cdk synth StaticSiteStack --strict  
 
+      - name: Debug GitHub OIDC context
+        env:
+          EXPECTED_REPOSITORY: JamieRuane/cs4421-astro-blog
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Ref: $GITHUB_REF"
+          echo "Event: $GITHUB_EVENT_NAME"
+          echo "Expected repository: $EXPECTED_REPOSITORY"
       - name: Configure AWS credentials with GitHub OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
