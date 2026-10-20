@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   diagnostic:
@@ -16,3 +17,28 @@ jobs:
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Ref: $GITHUB_REF"
           echo "Event: $GITHUB_EVENT_NAME"
+
+      - name: Inspect OIDC claims safely
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          response=$(curl -fsS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+
+          token=$(python -c \
+            'import json,sys; print(json.load(sys.stdin)["value"])' \
+            <<< "$response")
+
+          TOKEN="$token" python - <<'PY'
+          import os, json, base64
+
+          token = os.environ["TOKEN"]
+          payload = token.split(".")[1]
+          payload += "=" * (-len(payload) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload))
+
+          for key in ("iss", "aud", "sub", "repository", "ref"):
+              print(f"{key}: {claims.get(key)}")
+          PY
