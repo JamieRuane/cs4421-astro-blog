@@ -1,23 +1,21 @@
 # Security Headers Policy
 
-`security-policy.json` records the intended response headers for this site. It
-is provider-neutral and is not applied by Astro or included as a browser meta
-tag. The project currently generates a static site and has no configured
-hosting layer, so these headers are not active until the eventual host or CDN
-is configured to serve them.
+`security-policy.json` is the source for the security response headers applied
+by the CDK-managed CloudFront response headers policy. Astro does not apply
+these headers itself. The policy is attached to both the static site behavior
+and the `/api/*` behavior.
 
-When AWS hosting is selected, translate this policy into the chosen delivery
-layer's infrastructure configuration (for example, a CloudFront response
-headers policy managed as infrastructure-as-code). Keep that configuration
-aligned with this policy. Enable HSTS only after HTTPS is enforced for the
-site; add `includeSubDomains` only if every affected subdomain is HTTPS-only.
+Keep the generated CloudFront policy aligned with this file. Both CloudFront
+behaviors redirect HTTP viewers to HTTPS before applying HSTS. Do not add
+`includeSubDomains` unless every affected subdomain is HTTPS-only.
 
 ## Content Security Policy
 
-The current site loads scripts, styles, images, and fonts from its own origin.
-It has inline Astro-generated scripts and styles, so their SHA-256 hashes are
-explicitly allowlisted in `security-policy.json`. Do not replace these hashes
-with `unsafe-inline`, and do not add wildcard sources or `unsafe-eval`.
+The browser loads scripts, styles, images, fonts, and API responses from its
+own origin. The weather Lambda calls Open-Meteo server-side. Astro-generated
+inline scripts and styles are explicitly allowlisted by SHA-256 hash. Do not
+replace hashes with `unsafe-inline`, and do not add wildcard sources or
+`unsafe-eval`.
 
 After changing pages, scripts, styles, or Astro's generated output, regenerate
 the inline hashes from the current production build and validate them:
@@ -28,15 +26,13 @@ npm run security:refresh-hashes
 npm run security:validate
 ```
 
-The application uses Astro's Node SSR output, so its build has no prerendered
-HTML files to scan. The validator starts the built server locally and requests
-the HTML routes discovered from `src/pages/` (including blog slugs from the
-content collection). It derives hashes from those production-rendered inline
-`<script>` and `<style>` blocks and still checks built CSS and HTML resources.
-It refuses to update the policy if the build has inline style attributes,
-inline event handlers, disallowed resources, or another policy violation.
-Review the policy diff and rendered pages before committing. Normal
-`security:validate` is read-only and rejects missing or stale hashes. The
-validator checks the policy and generated build, but does not prove that a
-hosting provider is sending these headers; add a deployed-response check when
-the host is introduced.
+The site build contains static HTML, including blog routes generated from the
+content collection. The validator derives hashes from built inline `<script>`
+and `<style>` blocks and checks built CSS and HTML resources. It refuses to
+update the policy if the build has inline style attributes, inline event
+handlers, disallowed resources, or another policy violation. Normal
+`security:validate` is read-only and rejects missing or stale hashes.
+
+The validator checks the policy against generated site assets. The deployment
+workflow also checks the headers returned by CloudFront; headers existing only
+in this policy file are not sufficient.

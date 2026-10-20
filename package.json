@@ -14,11 +14,10 @@
     "test:unit": "vitest run",
     "security:validate": "node scripts/validate-security-policy.mjs",
     "security:refresh-hashes": "node scripts/validate-security-policy.mjs --refresh-hashes",
-    "lint": "eslint \"src/**/*.{js,ts}\""
+    "lint": "eslint \"{src,backend,cdk,test}/**/*.{js,ts}\""
   },
   "dependencies": {
     "@astrojs/mdx": "^8.1.0",
-    "@astrojs/node": "^11.1.8",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.3.5",
@@ -32,6 +31,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "aws-cdk": "^2.1144.0",
+    "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
     "eslint-plugin-astro": "^3.2.1",
     "tsx": "^4.23.15",

@@ -1,41 +1,49 @@
-# ADR-001: Transition from Static Site to Containerized SSR Runtime
+# ADR-001: Static Site Hosting with a Serverless API
 
 ## Status
 
-Superseded on 2026-10-07 by the static S3 + CloudFront deployment.
-
-Date: 2026-10-05
+Accepted on 2026-10-20.
 
 ## Context
 
-The blog is deployed as static files to a private S3 bucket behind
-CloudFront. S3 cannot execute Astro's Node server or dynamic API routes.
-The weather data is public and requires no secret key, so the browser can
-request it directly from Open-Meteo without a server-side endpoint.
+The website is primarily published content and does not need server rendering
+for its pages. It also has dynamic weather, feedback acknowledgement, and
+health endpoints. S3 cannot execute Astro's Node server or dynamic API routes.
 
 ## Decision
 
-Use Astro static output and deploy the generated `dist/` files to S3 +
-CloudFront. The Weather component calls Open-Meteo directly from the browser;
-the CSP connect-src policy allows only `https://api.open-meteo.com` in
-addition to the site's own origin. The existing health API is prerendered as
-static JSON, and CloudFront rewrites `/api/health` to that file. The deployment
-workflow continues to check the separate `/health.json` endpoint.
+Build Astro pages as static files and deploy them to the existing private S3
+bucket behind the existing CloudFront distribution. Generate blog post routes
+from the content collection during the build.
 
-If future features require private credentials or server-side dynamic
-responses, introduce a separate API service such as API Gateway + Lambda
-instead of deploying Astro's Node server to S3.
+Use an API Gateway HTTP API routed through the CloudFront `/api/*` behavior to
+three independent Lambda handlers for:
+
+- `GET /api/weather`
+- `POST /api/feedback`
+- `GET /api/health`
+
+Keep `/health.json` as a static site/CDN health document. The deployment
+workflow checks both health routes so it verifies the static and API paths.
+CloudFront enforces the response security headers from `security-policy.json`.
+
+The feedback handler validates submissions and returns the existing
+acknowledgement; it does not store submissions or log their personal contents.
+Provider credentials for future integrations must remain server-side.
 
 ## Consequences
 
 ### Positive
 
-- S3 + CloudFront can serve the complete site without a Node runtime.
-- Weather remains current through a public browser-to-provider request.
-- Both health-check URLs remain available as static JSON.
+- The mostly static site is served efficiently by S3 and CloudFront.
+- Dynamic endpoints have a runtime without keeping a server or container alive.
+- Existing `/api/*` browser URLs remain same-origin through CloudFront.
+- Lambda and API usage is metered, with no provisioned compute requirement.
 
 ### Negative
 
-- Browser users request weather directly from Open-Meteo; no server-side
-  proxy or secret API key is used.
-- Future secret-dependent server APIs will require a separate backend.
+- API Gateway and Lambda add infrastructure and deployment complexity.
+- The public API needs conservative throttling, validation, logging hygiene,
+  and operational monitoring.
+- Static routes must be generated during each build; request-time page rendering
+  is no longer available.
