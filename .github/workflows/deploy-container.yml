@@ -1,6 +1,7 @@
 
 name: Deploy Week 7 Container
-
+      # Verify the running container responds to health checks.
+      
 on:
   workflow_dispatch:
   push:
