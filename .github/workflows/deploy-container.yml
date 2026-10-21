@@ -1,0 +1,118 @@
+
+name: Deploy Week 7 Container
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/week7-container-cicd
+    paths:
+      - 'Dockerfile'
+      - 'container-server.mjs'
+      - '.dockerignore'
+      - 'cdk/lib/week7-container-stack.ts'
+      - 'cdk/bin/week7-container.ts'
+      - '.github/workflows/deploy-container.yml'
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: eu-west-1
+  ECR_REPOSITORY: my-astro-blog
+  ECS_CLUSTER: week7-container-cluster
+  ECS_SERVICE: week7-container-blog
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push container image
+        id: image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          docker build --tag "$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" .
+          docker push "$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "uri=$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+      
+      - name: Verify CDK synthesis
+        env:
+          CONTAINER_IMAGE_TAG: ${{ github.sha }}
+        run: npx cdk --app "npx tsx cdk/bin/week7-container.ts" synth Week7ContainerStack
+
+      - name: Deploy coursework infrastructure
+        env:
+          CONTAINER_IMAGE_TAG: ${{ github.sha }}
+        run: npx cdk --app "npx tsx cdk/bin/week7-container.ts" deploy Week7ContainerStack --require-approval never
+
+      - name: Verify ECS service health
+        run: |
+          set -euo pipefail
+
+          aws ecs wait services-stable \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE"
+
+          aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE" \
+            --query 'services[0].{Running:runningCount,Desired:desiredCount,Status:status,TaskDefinition:taskDefinition}' \
+            --output table
+
+      - name: Verify application health
+        run: |
+          set -euo pipefail
+
+          TASK_ARN=$(aws ecs list-tasks \
+            --cluster "$ECS_CLUSTER" \
+            --service-name "$ECS_SERVICE" \
+            --desired-status RUNNING \
+            --query 'taskArns[0]' \
+            --output text)
+
+          TASK_IP=$(aws ecs describe-tasks \
+            --cluster "$ECS_CLUSTER" \
+            --tasks "$TASK_ARN" \
+            --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value | [0]" \
+            --output text | xargs -I {} aws ec2 describe-network-interfaces \
+              --network-interface-ids {} \
+              --query 'NetworkInterfaces[0].Association.PublicIp' \
+              --output text)
+
+          curl --fail --retry 10 --retry-delay 5 --retry-connrefused \
+            "http://${TASK_IP}:8080/api/health"
+
+      - name: Collect CloudWatch logs
+        if: always()
+        run: |
+          aws logs tail /ecs/week7-container-blog \
+            --since 10m \
+            --region "$AWS_REGION" || true
