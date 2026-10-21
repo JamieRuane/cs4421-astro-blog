@@ -1,0 +1,36 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VerifyWeek7ECSService",
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServices",
+        "ecs:DescribeTasks",
+        "ecs:ListTasks"
+      ],
+      "Resource": [
+        "arn:aws:ecs:eu-west-1:423741523931:service/week7-container-cluster/week7-container-blog",
+        "arn:aws:ecs:eu-west-1:423741523931:task/week7-container-cluster/*",
+        "arn:aws:ecs:eu-west-1:423741523931:container-instance/week7-container-cluster/*"
+      ]
+    },
+    {
+      "Sid": "ReadWeek7ContainerLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:DescribeLogStreams",
+        "logs:DescribeLogGroups"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ReadWeek7TaskNetworkInterface",
+      "Effect": "Allow",
+      "Action": "ec2:DescribeNetworkInterfaces",
+      "Resource": "*"
+    }
+  ]
+}
