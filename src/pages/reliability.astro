@@ -639,7 +639,7 @@ import Header from '../components/Header.astro';
 		const errorBudget = value.errorBudget;
 		if (!isRecord(api) || !Array.isArray(lambda) || !isRecord(slis)) return false;
 		const availability = slis.availability;
-		const apiLatencyP95 = slis.apiLatencyP95;
+		const p95LatencyMetric = slis.apiLatencyP95;
 		if (
 			!isMetric(api.requestCount) ||
 			!isMetric(api.clientErrorCount) ||
