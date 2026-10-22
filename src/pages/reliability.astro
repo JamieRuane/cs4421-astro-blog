@@ -1,0 +1,736 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+---
+
+<html lang="en">
+	<head>
+		<BaseHead
+			title="Reliability | Jamie Ruane"
+			description="Measured API and Lambda reliability signals and service-level objectives."
+		/>
+	</head>
+	<body>
+		<Header />
+		<main class="dashboard">
+			<header class="page-heading">
+				<p class="eyebrow">Operations</p>
+				<h1>Reliability</h1>
+				<p>
+					Measured API and Lambda signals compared with the configured service objectives.
+					CloudWatch metrics can be delayed; each measurement includes its latest data timestamp.
+				</p>
+			</header>
+
+			<section class="controls" aria-label="Dashboard controls">
+				<label for="window-hours">Measurement window</label>
+				<select id="window-hours">
+					<option value="1">Last hour</option>
+					<option value="6">Last 6 hours</option>
+					<option value="24" selected>Last 24 hours</option>
+					<option value="168">Last 7 days</option>
+					<option value="720">Last 30 days</option>
+				</select>
+				<p id="updated-at">Not yet updated</p>
+			</section>
+
+			<p class="delay-notice">
+				CloudWatch publishes these metrics asynchronously. Recent values may be incomplete or delayed.
+				Unavailable data is shown as unavailable, never as a healthy zero.
+			</p>
+
+			<p id="dashboard-state" role="status" aria-live="polite">Loading reliability metrics…</p>
+			<p id="dashboard-error" role="alert" hidden></p>
+			<p id="empty-data" role="status" hidden>
+				CloudWatch returned no request or Lambda invocation datapoints for this window.
+				These measurements are unavailable, not zero.
+			</p>
+			<div id="dashboard-content" hidden>
+				<p id="window-range" class="window-range"></p>
+
+				<section aria-labelledby="api-heading">
+					<h2 id="api-heading">API Gateway</h2>
+					<div class="metric-grid">
+						<article class="metric-card">
+							<h3>Requests</h3>
+							<p class="metric-value" data-value="requests">Unavailable</p>
+							<p class="metric-time" data-time="requests"></p>
+							<p class="metric-detail" data-reason="requests"></p>
+						</article>
+						<article class="metric-card">
+							<h3>5xx error rate</h3>
+							<p class="metric-value" data-value="error-rate">Unavailable</p>
+							<p class="metric-time" data-time="error-rate"></p>
+							<p class="metric-detail" data-reason="error-rate"></p>
+						</article>
+						<article class="metric-card">
+							<h3>5xx responses</h3>
+							<p class="metric-value" data-value="server-errors">Unavailable</p>
+							<p class="metric-time" data-time="server-errors"></p>
+							<p class="metric-detail" data-reason="server-errors"></p>
+						</article>
+						<article class="metric-card">
+							<h3>4xx responses <span class="quiet">(excluded from availability)</span></h3>
+							<p class="metric-value" data-value="client-errors">Unavailable</p>
+							<p class="metric-time" data-time="client-errors"></p>
+							<p class="metric-detail" data-reason="client-errors"></p>
+						</article>
+						<article class="metric-card">
+							<h3>Latest gateway latency p50 <span class="quiet" data-period="p50"></span></h3>
+							<p class="metric-value" data-value="latency-p50">Unavailable</p>
+							<p class="metric-time" data-time="latency-p50"></p>
+							<p class="metric-detail" data-reason="latency-p50"></p>
+						</article>
+						<article class="metric-card">
+							<h3>Latest gateway latency p95 <span class="quiet" data-period="p95"></span></h3>
+							<p class="metric-value" data-value="latency-p95">Unavailable</p>
+							<p class="metric-time" data-time="latency-p95"></p>
+							<p class="metric-detail" data-reason="latency-p95"></p>
+						</article>
+						<article class="metric-card">
+							<h3>Average gateway latency</h3>
+							<p class="metric-value" data-value="latency-average">Unavailable</p>
+							<p class="metric-time" data-time="latency-average"></p>
+							<p class="metric-detail" data-reason="latency-average"></p>
+						</article>
+					</div>
+				</section>
+
+				<section aria-labelledby="slo-heading">
+					<h2 id="slo-heading">SLIs and objectives</h2>
+					<div class="metric-grid">
+						<article class="metric-card">
+							<h3>Measured API availability</h3>
+							<p class="metric-value" data-value="availability">Unavailable</p>
+							<p class="metric-time" data-time="availability"></p>
+							<p class="objective">Objective: <span data-target="availability">Unavailable</span></p>
+							<p class="comparison" data-comparison="availability">Not measurable</p>
+							<p class="metric-detail" data-reason="availability"></p>
+						</article>
+						<article class="metric-card">
+							<h3>Latest API latency p95</h3>
+							<p class="metric-value" data-value="slo-latency-p95">Unavailable</p>
+							<p class="metric-time" data-time="slo-latency-p95"></p>
+							<p class="objective">Objective: <span data-target="latency-p95">Unavailable</span></p>
+							<p class="comparison" data-comparison="latency-p95">Not measurable</p>
+							<p class="metric-detail" data-reason="slo-latency-p95"></p>
+						</article>
+						<article class="metric-card">
+							<h3>30-day availability error budget</h3>
+							<p class="metric-value" data-value="budget-consumed">Unavailable</p>
+							<p class="metric-time" data-time="budget-consumed"></p>
+							<p class="objective">Remaining: <span data-value="budget-remaining">Unavailable</span></p>
+							<p class="metric-detail" data-reason="budget-consumed"></p>
+						</article>
+					</div>
+					<p id="budget-coverage" class="metric-detail"></p>
+				</section>
+
+				<section aria-labelledby="lambda-heading">
+					<h2 id="lambda-heading">Lambda functions</h2>
+					<div class="table-scroll">
+						<table>
+							<thead>
+								<tr>
+									<th scope="col">Function</th>
+									<th scope="col">Invocations</th>
+									<th scope="col">Errors</th>
+									<th scope="col">Throttles</th>
+									<th scope="col">Average duration</th>
+								</tr>
+							</thead>
+							<tbody id="lambda-rows"></tbody>
+						</table>
+					</div>
+					<p class="metric-detail">
+						The reliability metrics endpoint is excluded from this function list. Lambda signals
+						alone do not establish end-to-end site availability.
+					</p>
+				</section>
+
+				<details class="definitions">
+					<summary>SLI definitions and limitations</summary>
+					<ul>
+						<li>
+							Availability is <code>1 − API Gateway 5xx responses ÷ API Gateway requests</code>.
+							The denominator covers all API routes, including this dashboard endpoint;
+							HTTP 4xx client responses are excluded. Both CloudWatch series must be present,
+							and the request denominator must be greater than zero.
+						</li>
+						<li>
+							The latency objective compares the latest API Gateway response-latency p95 bucket
+							with its configured threshold. Each p50/p95 is calculated within the timestamped
+							one-minute bucket, or five-minute bucket for a 30-day selection; it is not a
+							percentile combined across the whole selected window. Gateway latency includes
+							integration time and is not a browser-experience or static-content SLI.
+						</li>
+						<li>
+							The error budget uses the previous 720 complete hourly periods. It is available
+							only when every hour has both request and 5xx metric data; missing telemetry is
+							not interpreted as zero errors. The measured availability and configured objective
+							determine allowed, consumed, and remaining errors.
+						</li>
+						<li>
+							The API SLI covers API Gateway responses only. It does not claim end-to-end
+							availability for CloudFront, S3-hosted pages, or browser-side behavior.
+						</li>
+					</ul>
+				</details>
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main.dashboard {
+		width: min(100% - 2rem, 1280px);
+		max-width: 1280px;
+		padding: clamp(2rem, 5vw, 4rem) 0;
+	}
+
+	function isRecord(value: unknown): value is Record<string, unknown> {
+		return typeof value === 'object' && value !== null;
+	}
+
+	function isMetric(value: unknown): value is Metric {
+		return isRecord(value) &&
+			(value.status === 'available' || value.status === 'unavailable') &&
+			(value.value === null || typeof value.value === 'number') &&
+			(value.timestamp === null || typeof value.timestamp === 'string');
+	}
+
+	function isReliabilityResponse(value: unknown): value is ReliabilityResponse {
+		if (!isRecord(value) || !isRecord(value.window) || !isRecord(value.metrics)) return false;
+		if (!isRecord(value.metrics.apiGateway) || !Array.isArray(value.metrics.lambda)) return false;
+		const api = value.metrics.apiGateway;
+		if (
+			!isMetric(api.requestCount) ||
+			!isMetric(api.clientErrorCount) ||
+			!isMetric(api.serverErrorCount) ||
+			!isMetric(api.serverErrorRate) ||
+			!isRecord(api.latencyMs) ||
+			!isMetric(api.latencyMs.average) ||
+			!isMetric(api.latencyMs.p50) ||
+			!isMetric(api.latencyMs.p95)
+		) return false;
+		if (
+			!isRecord(value.slis) ||
+			!isRecord(value.slis.availability) ||
+			!isMetric(value.slis.availability.value) ||
+			typeof value.slis.availability.target !== 'number' ||
+			!isRecord(value.slis.apiLatencyP95) ||
+			!isMetric(value.slis.apiLatencyP95.value) ||
+			typeof value.slis.apiLatencyP95.targetMs !== 'number'
+		) return false;
+		return typeof value.generatedAt === 'string' &&
+			typeof value.window.start === 'string' &&
+			typeof value.window.end === 'string' &&
+			typeof value.window.hours === 'number';
+	}
+	.page-heading {
+		max-width: 52rem;
+		margin-bottom: 2rem;
+	}
+	.page-heading h1 {
+		margin-bottom: 0.75rem;
+		font-size: clamp(2.5rem, 6vw, 4rem);
+	}
+	.page-heading p {
+		margin: 0;
+	}
+	.eyebrow {
+		margin-bottom: 0.5rem !important;
+		color: var(--accent);
+		font-size: 0.82rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.controls {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem 1rem;
+		margin-bottom: 1rem;
+	}
+	.controls label {
+		font-weight: 700;
+	}
+	.controls select {
+		padding: 0.45rem 0.7rem;
+		color: rgb(var(--gray-dark));
+		background: var(--surface);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 0.4rem;
+		font: inherit;
+		font-size: 1rem;
+	}
+	.controls p {
+		margin: 0 0 0 auto;
+		color: rgb(var(--gray));
+		font-size: 0.9rem;
+	}
+	.delay-notice {
+		padding: 0.9rem 1rem;
+		border-left: 4px solid var(--accent);
+		background: rgba(var(--gray-light), 0.45);
+		font-size: 0.95rem;
+	}
+	#dashboard-state,
+	#dashboard-error,
+	.window-range {
+		font-size: 0.95rem;
+	}
+	#dashboard-error {
+		color: #9f2424;
+	}
+	section {
+		margin-block: 2.5rem;
+	}
+	section h2 {
+		margin-bottom: 1rem;
+		font-size: clamp(1.5rem, 3vw, 2rem);
+	}
+	.metric-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+		gap: 1rem;
+	}
+	.metric-card {
+		min-width: 0;
+		padding: 1.1rem 1.2rem;
+		background: var(--surface);
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 0.75rem;
+		box-shadow: 0 3px 14px rgba(var(--gray), 0.12);
+	}
+	.metric-card h3 {
+		margin-bottom: 0.65rem;
+		font-size: 1rem;
+	}
+	.metric-value {
+		margin: 0;
+		color: rgb(var(--black));
+		font-size: clamp(1.5rem, 4vw, 2rem);
+		font-weight: 700;
+		line-height: 1.25;
+		font-variant-numeric: tabular-nums;
+	}
+	.metric-time,
+	.metric-detail,
+	.objective,
+	.comparison {
+		margin: 0.4rem 0 0;
+		color: rgb(var(--gray));
+		font-size: 0.82rem;
+		line-height: 1.45;
+	}
+	.objective {
+		color: rgb(var(--gray-dark));
+	}
+	.comparison[data-result='met'] {
+		color: #167447;
+		font-weight: 700;
+	}
+	.comparison[data-result='missed'] {
+		color: #a23232;
+		font-weight: 700;
+	}
+	[data-theme='dark'] .comparison[data-result='met'] {
+		color: #70d6a5;
+	}
+	[data-theme='dark'] .comparison[data-result='missed'] {
+		color: #ff9a9a;
+	}
+	.quiet {
+		color: rgb(var(--gray));
+		font-size: 0.78rem;
+		font-weight: 400;
+	}
+	.table-scroll {
+		overflow-x: auto;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 0.65rem;
+		background: var(--surface);
+	}
+	table {
+		min-width: 660px;
+		border-collapse: collapse;
+		font-size: 0.95rem;
+	}
+	th,
+	td {
+		padding: 0.8rem 1rem;
+		border-bottom: 1px solid rgb(var(--gray-light));
+		text-align: left;
+		font-variant-numeric: tabular-nums;
+	}
+	th {
+		color: rgb(var(--gray-dark));
+		font-size: 0.84rem;
+	}
+	td:not(:first-child) {
+		white-space: nowrap;
+	}
+	.table-time {
+		display: inline-block;
+		margin-top: 0.25rem;
+		color: rgb(var(--gray));
+		font-size: 0.68rem;
+		white-space: normal;
+	}
+	tbody tr:last-child td {
+		border-bottom: 0;
+	}
+	.definitions {
+		margin-top: 2.5rem;
+		padding: 1rem 1.2rem;
+		background: rgba(var(--gray-light), 0.3);
+		border-radius: 0.65rem;
+		font-size: 0.92rem;
+	}
+	.definitions summary {
+		color: rgb(var(--black));
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.definitions li + li {
+		margin-top: 0.75rem;
+	}
+	code {
+		font-size: 0.88em;
+	}
+	@media (max-width: 600px) {
+		main.dashboard {
+			width: calc(100% - 1.5rem);
+		}
+		.controls p {
+			flex: 1 0 100%;
+		}
+	}
+</style>
+
+<script>
+	type Metric = {
+		value: number | null;
+		timestamp: string | null;
+		status: 'available' | 'unavailable';
+		reason?: string;
+	};
+
+	type ReliabilityResponse = {
+		generatedAt: string;
+		window: { start: string; end: string; hours: number };
+		metrics: {
+			apiGateway: {
+				requestCount: Metric;
+				clientErrorCount: Metric;
+				serverErrorCount: Metric;
+				serverErrorRate: Metric;
+				latencyMs: {
+					average: Metric;
+					p50: Metric;
+					p95: Metric;
+					percentilePeriodSeconds: number;
+				};
+			};
+			lambda: Array<{
+				name: string;
+				invocations: Metric;
+				errors: Metric;
+				throttles: Metric;
+				durationAverageMs: Metric;
+			}>;
+		};
+		slis: {
+			availability: { value: Metric; target: number };
+			apiLatencyP95: { value: Metric; targetMs: number };
+		};
+		errorBudget: {
+			status: 'available' | 'unavailable';
+			consumedPercent?: Metric;
+			remainingPercent?: Metric;
+			coverage?: {
+				expectedHours: number;
+				requestHours: number;
+				serverErrorHours: number;
+			};
+			reason?: string;
+		};
+	};
+
+	const select = document.querySelector<HTMLSelectElement>('#window-hours');
+	const state = document.querySelector<HTMLElement>('#dashboard-state');
+	const errorNotice = document.querySelector<HTMLElement>('#dashboard-error');
+	const content = document.querySelector<HTMLElement>('#dashboard-content');
+	const timestampFormatter = new Intl.DateTimeFormat(undefined, {
+		dateStyle: 'medium',
+		timeStyle: 'medium',
+	});
+
+	function formatTimestamp(value: string | null): string {
+		if (!value) return 'Timestamp unavailable';
+		const parsed = new Date(value);
+		return Number.isNaN(parsed.valueOf())
+			? 'Timestamp unavailable'
+			: `Metric timestamp: ${timestampFormatter.format(parsed)}`;
+	}
+
+	function formatMetric(
+		name: string,
+		metric: Metric,
+		format: (value: number) => string,
+	): void {
+		const valueElement = document.querySelector<HTMLElement>(`[data-value="${name}"]`);
+		const timeElement = document.querySelector<HTMLElement>(`[data-time="${name}"]`);
+		const reasonElement = document.querySelector<HTMLElement>(`[data-reason="${name}"]`);
+		if (valueElement) {
+			valueElement.textContent = metric.status === 'available' && metric.value !== null
+				? format(metric.value)
+				: 'Unavailable';
+		}
+		if (timeElement) timeElement.textContent = formatTimestamp(metric.timestamp);
+		if (reasonElement) reasonElement.textContent = metric.reason ?? '';
+	}
+
+	function percent(value: number): string {
+		return `${(value * 100).toFixed(3)}%`;
+	}
+
+	function count(value: number): string {
+		return new Intl.NumberFormat().format(value);
+	}
+
+	function milliseconds(value: number): string {
+		return `${value.toFixed(1)} ms`;
+	}
+
+	function setComparison(
+		name: string,
+		metric: Metric,
+		meetsObjective: (value: number) => boolean,
+	): void {
+		const comparison = document.querySelector<HTMLElement>(`[data-comparison="${name}"]`);
+		if (!comparison) return;
+		if (metric.status !== 'available' || metric.value === null) {
+			comparison.textContent = 'Not measurable';
+			delete comparison.dataset.result;
+			return;
+		}
+		const met = meetsObjective(metric.value);
+		comparison.textContent = met ? 'Measured value meets objective' : 'Measured value misses objective';
+		comparison.dataset.result = met ? 'met' : 'missed';
+	}
+
+	function addLambdaRows(rows: ReliabilityResponse['metrics']['lambda']): void {
+		const body = document.querySelector<HTMLTableSectionElement>('#lambda-rows');
+		if (!body) return;
+		body.replaceChildren();
+
+		for (const row of rows) {
+			const tableRow = document.createElement('tr');
+			const cells: Array<{ metric?: Metric; text: string }> = [
+				{ text: row.name },
+				{ metric: row.invocations, text: 'count' },
+				{ metric: row.errors, text: 'count' },
+				{ metric: row.throttles, text: 'count' },
+				{ metric: row.durationAverageMs, text: 'duration' },
+			];
+			for (const [index, item] of cells.entries()) {
+				const cell = document.createElement('td');
+				if (index === 0) {
+					cell.textContent = item.text;
+				} else if (item.metric) {
+					const metric = item.metric;
+					cell.textContent = metric.status === 'available' && metric.value !== null
+						? item.text === 'duration'
+							? milliseconds(metric.value)
+							: count(metric.value)
+						: 'Unavailable';
+					const details = document.createElement('small');
+					details.className = 'table-time';
+					details.textContent = metric.timestamp
+						? formatTimestamp(metric.timestamp)
+						: metric.reason ?? 'Timestamp unavailable';
+					cell.append(document.createElement('br'), details);
+				}
+				tableRow.append(cell);
+			}
+			body.append(tableRow);
+		}
+	}
+
+	function render(data: ReliabilityResponse): void {
+		const api = data.metrics.apiGateway;
+		const availability = data.slis.availability.value;
+		const p95 = data.slis.apiLatencyP95.value;
+		formatMetric('requests', api.requestCount, count);
+		formatMetric('error-rate', api.serverErrorRate, percent);
+		formatMetric('server-errors', api.serverErrorCount, count);
+		formatMetric('client-errors', api.clientErrorCount, count);
+		formatMetric('latency-p50', api.latencyMs.p50, milliseconds);
+		formatMetric('latency-p95', api.latencyMs.p95, milliseconds);
+		formatMetric('latency-average', api.latencyMs.average, milliseconds);
+		const percentilePeriod = api.latencyMs.percentilePeriodSeconds;
+		for (const percentile of ['p50', 'p95']) {
+			const periodLabel = document.querySelector<HTMLElement>(`[data-period="${percentile}"]`);
+			if (periodLabel) {
+				periodLabel.textContent = `(${percentilePeriod / 60}-minute bucket)`;
+			}
+		}
+		formatMetric('availability', availability, percent);
+		formatMetric('slo-latency-p95', p95, milliseconds);
+
+		const availabilityTarget = document.querySelector<HTMLElement>('[data-target="availability"]');
+		const latencyTarget = document.querySelector<HTMLElement>('[data-target="latency-p95"]');
+		if (availabilityTarget) availabilityTarget.textContent = percent(data.slis.availability.target);
+		if (latencyTarget) latencyTarget.textContent = milliseconds(data.slis.apiLatencyP95.targetMs);
+		setComparison('availability', availability, (value) => value >= data.slis.availability.target);
+		setComparison('latency-p95', p95, (value) => value <= data.slis.apiLatencyP95.targetMs);
+
+		const budgetMetric = data.errorBudget.consumedPercent ??
+			{ value: null, timestamp: null, status: 'unavailable' as const, reason: data.errorBudget.reason };
+		const remainingMetric = data.errorBudget.remainingPercent ??
+			{ value: null, timestamp: null, status: 'unavailable' as const, reason: data.errorBudget.reason };
+		formatMetric('budget-consumed', budgetMetric, (value) => `${value.toFixed(1)}% consumed`);
+		formatMetric('budget-remaining', remainingMetric, (value) => `${value.toFixed(1)}%`);
+		const coverage = data.errorBudget.coverage;
+		const coverageElement = document.querySelector<HTMLElement>('#budget-coverage');
+		if (coverageElement) {
+			coverageElement.textContent = coverage
+				? `Data coverage: ${coverage.requestHours}/${coverage.expectedHours} request hours and ${coverage.serverErrorHours}/${coverage.expectedHours} server-error hours.`
+				: '';
+		}
+
+		addLambdaRows(data.metrics.lambda);
+		const emptyData = document.querySelector<HTMLElement>('#empty-data');
+		if (emptyData) {
+			emptyData.hidden = data.metrics.apiGateway.requestCount.status === 'available' ||
+				data.metrics.lambda.some((row) => row.invocations.status === 'available');
+		}
+		const start = timestampFormatter.format(new Date(data.window.start));
+		const end = timestampFormatter.format(new Date(data.window.end));
+		const range = document.querySelector<HTMLElement>('#window-range');
+		if (range) range.textContent = `Selected window: ${start} to ${end}.`;
+		const updated = document.querySelector<HTMLElement>('#updated-at');
+		if (updated) updated.textContent = `Response received: ${timestampFormatter.format(new Date(data.generatedAt))}`;
+	}
+
+	function isRecord(value: unknown): value is Record<string, unknown> {
+		return typeof value === 'object' && value !== null;
+	}
+
+	function isMetric(value: unknown): value is Metric {
+		return isRecord(value) &&
+			(value.status === 'available' || value.status === 'unavailable') &&
+			(value.value === null || (typeof value.value === 'number' && Number.isFinite(value.value))) &&
+			(value.timestamp === null ||
+				(typeof value.timestamp === 'string' && Number.isFinite(Date.parse(value.timestamp)))) &&
+			(value.reason === undefined || typeof value.reason === 'string');
+	}
+
+	function isReliabilityResponse(value: unknown): value is ReliabilityResponse {
+		if (!isRecord(value) || !isRecord(value.window) || !isRecord(value.metrics)) return false;
+		const api = value.metrics.apiGateway;
+		const lambda = value.metrics.lambda;
+		const slis = value.slis;
+		const errorBudget = value.errorBudget;
+		if (!isRecord(api) || !Array.isArray(lambda) || !isRecord(slis)) return false;
+		const availability = slis.availability;
+		const apiLatencyP95 = slis.apiLatencyP95;
+		if (
+			!isMetric(api.requestCount) ||
+			!isMetric(api.clientErrorCount) ||
+			!isMetric(api.serverErrorCount) ||
+			!isMetric(api.serverErrorRate) ||
+			!isRecord(api.latencyMs) ||
+			!isMetric(api.latencyMs.average) ||
+			!isMetric(api.latencyMs.p50) ||
+			!isMetric(api.latencyMs.p95) ||
+			typeof api.latencyMs.percentilePeriodSeconds !== 'number' ||
+			!isRecord(availability) ||
+			!isMetric(availability.value) ||
+			typeof availability.target !== 'number' ||
+			!isRecord(apiLatencyP95) ||
+			!isMetric(apiLatencyP95.value) ||
+			typeof apiLatencyP95.targetMs !== 'number' ||
+			!isRecord(errorBudget) ||
+			(errorBudget.status !== 'available' && errorBudget.status !== 'unavailable') ||
+			!isMetric(errorBudget.requestCount) ||
+			!isMetric(errorBudget.serverErrorCount) ||
+			!isRecord(errorBudget.coverage) ||
+			typeof errorBudget.coverage.expectedHours !== 'number' ||
+			typeof errorBudget.coverage.requestHours !== 'number' ||
+			typeof errorBudget.coverage.serverErrorHours !== 'number' ||
+			(errorBudget.consumedPercent !== undefined && !isMetric(errorBudget.consumedPercent)) ||
+			(errorBudget.remainingPercent !== undefined && !isMetric(errorBudget.remainingPercent))
+		) return false;
+		if (!lambda.every((item) =>
+			isRecord(item) &&
+			typeof item.name === 'string' &&
+			typeof item.functionName === 'string' &&
+			isMetric(item.invocations) &&
+			isMetric(item.errors) &&
+			isMetric(item.throttles) &&
+			isMetric(item.durationAverageMs),
+		)) return false;
+		return typeof value.generatedAt === 'string' &&
+			typeof value.window.start === 'string' &&
+			typeof value.window.end === 'string' &&
+			typeof value.window.hours === 'number';
+	}
+
+	let activeRequest = 0;
+
+	async function loadMetrics(): Promise<void> {
+		if (!select || !state || !errorNotice || !content) return;
+		const requestId = ++activeRequest;
+		const hours = select.value;
+		const emptyData = document.querySelector<HTMLElement>('#empty-data');
+		state.hidden = false;
+		state.textContent = 'Loading reliability metrics…';
+		errorNotice.hidden = true;
+		if (emptyData) emptyData.hidden = true;
+		content.hidden = true;
+
+		try {
+			const response = await fetch(`/api/reliability?hours=${encodeURIComponent(hours)}`, {
+				headers: { accept: 'application/json' },
+				cache: 'no-store',
+			});
+			let body: unknown;
+			try {
+				body = await response.json();
+			} catch {
+				throw new Error('Reliability metrics returned an unreadable response.');
+			}
+			if (requestId !== activeRequest) return;
+			if (!response.ok) {
+				const message = typeof body === 'object' && body !== null &&
+					'error' in body && typeof body.error === 'string'
+					? body.error
+					: 'Reliability metrics could not be loaded.';
+				throw new Error(message);
+			}
+
+			if (!isReliabilityResponse(body)) {
+				throw new Error('The reliability response was not in the expected format.');
+			}
+			render(body);
+			state.hidden = true;
+			content.hidden = false;
+		} catch (error) {
+			if (requestId !== activeRequest) return;
+			state.hidden = true;
+			errorNotice.textContent = error instanceof Error
+				? error.message
+				: 'Reliability metrics could not be loaded.';
+			errorNotice.hidden = false;
+		}
+	}
+
+	select?.addEventListener('change', () => void loadMetrics());
+	void loadMetrics();
+</script>

@@ -54,6 +54,12 @@ const STATIC_ITEMS: SearchItem[] = [
 		description: 'Visit my place and see the local weather.',
 		url: '/about/',
 	},
+	{
+		title: 'Reliability',
+		type: 'Section',
+		description: 'View measured API and Lambda reliability metrics and service objectives.',
+		url: '/reliability/',
+	},
 ];
 
 function normalize(value: string): string {

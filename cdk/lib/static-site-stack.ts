@@ -7,6 +7,7 @@ import * as integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
@@ -21,6 +22,8 @@ type SecurityPolicy = {
 
 export interface StaticSiteStackProps extends cdk.StackProps {
 	siteAssetPath?: string;
+	reliabilitySloAvailabilityTarget?: number;
+	reliabilitySloApiLatencyP95TargetMs?: number;
 }
 
 function createSecurityHeadersPolicy(scope: cdk.Stack): cloudfront.ResponseHeadersPolicy {
@@ -63,7 +66,26 @@ function createSecurityHeadersPolicy(scope: cdk.Stack): cloudfront.ResponseHeade
 
 export class StaticSiteStack extends cdk.Stack {
 	constructor(scope: cdk.App, id: string, props?: StaticSiteStackProps) {
-		const { siteAssetPath, ...stackProps } = props ?? {};
+		const {
+			siteAssetPath,
+			reliabilitySloAvailabilityTarget = 0.999,
+			reliabilitySloApiLatencyP95TargetMs = 1_000,
+			...stackProps
+		} = props ?? {};
+		if (
+			!Number.isFinite(reliabilitySloAvailabilityTarget) ||
+			reliabilitySloAvailabilityTarget <= 0 ||
+			reliabilitySloAvailabilityTarget > 1
+		) {
+			throw new Error('Reliability availability SLO must be greater than 0 and at most 1.');
+		}
+		if (
+			!Number.isFinite(reliabilitySloApiLatencyP95TargetMs) ||
+			reliabilitySloApiLatencyP95TargetMs <= 0 ||
+			reliabilitySloApiLatencyP95TargetMs > 120_000
+		) {
+			throw new Error('Reliability API p95 latency SLO must be between 0 and 120000 ms.');
+		}
 		super(scope, id, {
 			...stackProps,
 			env: {
@@ -93,6 +115,11 @@ export class StaticSiteStack extends cdk.Stack {
 		});
 		const moviesLogGroup = new logs.LogGroup(this, 'MoviesHandlerLogs', {
 			logGroupName: '/aws/lambda/personal-site-movies',
+			retention: logs.RetentionDays.ONE_WEEK,
+			removalPolicy: cdk.RemovalPolicy.DESTROY,
+		});
+		const reliabilityLogGroup = new logs.LogGroup(this, 'ReliabilityHandlerLogs', {
+			logGroupName: '/aws/lambda/personal-site-reliability',
 			retention: logs.RetentionDays.ONE_WEEK,
 			removalPolicy: cdk.RemovalPolicy.DESTROY,
 		});
@@ -149,11 +176,30 @@ export class StaticSiteStack extends cdk.Stack {
 			},
 		});
 		tmdbToken.grantRead(moviesHandler);
+		const reliabilityHandler = new nodejs.NodejsFunction(this, 'ReliabilityHandler', {
+			entry: resolve(process.cwd(), 'backend/handlers/reliability.ts'),
+			handler: 'handler',
+			runtime: lambda.Runtime.NODEJS_22_X,
+			functionName: 'personal-site-reliability',
+			timeout: cdk.Duration.seconds(10),
+			memorySize: 128,
+			logGroup: reliabilityLogGroup,
+			environment: {
+				SLO_AVAILABILITY_TARGET: String(reliabilitySloAvailabilityTarget),
+				SLO_API_LATENCY_P95_TARGET_MS: String(reliabilitySloApiLatencyP95TargetMs),
+			},
+		});
 
 		const httpApi = new apigatewayv2.HttpApi(this, 'SiteApi', {
 			apiName: 'personal-site-api',
 			createDefaultStage: false,
 		});
+		reliabilityHandler.addEnvironment('API_ID', httpApi.apiId);
+		reliabilityHandler.addEnvironment('API_STAGE', '$default');
+		reliabilityHandler.addToRolePolicy(new iam.PolicyStatement({
+			actions: ['cloudwatch:GetMetricData'],
+			resources: ['*'],
+		}));
 		httpApi.addRoutes({
 			path: '/api/weather',
 			methods: [apigatewayv2.HttpMethod.GET],
@@ -173,6 +219,14 @@ export class StaticSiteStack extends cdk.Stack {
 			path: '/api/movies',
 			methods: [apigatewayv2.HttpMethod.GET],
 			integration: new integrations.HttpLambdaIntegration('MoviesIntegration', moviesHandler),
+		});
+		httpApi.addRoutes({
+			path: '/api/reliability',
+			methods: [apigatewayv2.HttpMethod.GET],
+			integration: new integrations.HttpLambdaIntegration(
+				'ReliabilityIntegration',
+				reliabilityHandler,
+			),
 		});
 		new apigatewayv2.HttpStage(this, 'ApiStage', {
 			httpApi,
