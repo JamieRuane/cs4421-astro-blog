@@ -19,7 +19,7 @@ try {
 } catch (error) {
   console.error('Weather error:', error);
 }
-function getWeatherDescription(code) {
+function getWeatherDescription(code: number) {
   if (code === 0) return 'Clear sky';
   if (code <= 3) return 'Cloudy';
   if (code <= 48) return 'Foggy';
@@ -31,7 +31,7 @@ function getWeatherDescription(code) {
 
   return 'Unknown';
 }
-function getWeatherIcon(code) {
+function getWeatherIcon(code: number) {
   if (code === 0) return '☀️';
   if (code <= 3) return '☁️';
   if (code <= 48) return '🌫️';
@@ -41,11 +41,6 @@ function getWeatherIcon(code) {
   if (code >= 95) return '⛈️';
 
   return '🌤️';
-}
-function getWindDirection(degrees) {
-  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-
-  return directions[Math.round(degrees / 45) % 8];
 }
 ---
 

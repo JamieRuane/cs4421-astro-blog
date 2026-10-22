@@ -5,6 +5,7 @@ const handlers = {
 	'GET /api/movies': '/backend/handlers/movies.ts',
 	'POST /api/feedback': '/backend/handlers/feedback.ts',
 	'GET /api/health': '/backend/handlers/health.ts',
+	'GET /api/reliability': '/backend/handlers/reliability.ts',
 };
 
 export function localApiPlugin() {

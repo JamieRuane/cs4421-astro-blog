@@ -1,11 +1,10 @@
-# Week 6: Containerisation (historical exercise)
+# Week 6: Containerisation and Week 5 SSR runtime
 
-The container exercise documented here predates the current deployment
-architecture. The production site uses static Astro output on S3 and CloudFront,
-with API Gateway HTTP API and Lambda for dynamic endpoints. The repository no
-longer builds or deploys an Astro Node SSR container.
+The production site still uses static Astro output on S3 and CloudFront, with
+API Gateway HTTP API and Lambda for dynamic endpoints. The current coursework
+implementation additionally builds an Astro Node SSR container.
 
-Do not use the old container workflow for production. See
-[ADR-001](./adr/ADR-001-static-to-ssr.md) for the current deployment decision
+The container runs `node dist/server/entry.mjs`, not a static file server. See
+[ADR-001](./adr/ADR-001-transition-to-ssr.md) for the current deployment decision
 and [deployment-oidc.md](./deployment-oidc.md) for GitHub Actions identity
 prerequisites.

@@ -5,7 +5,7 @@ Production site: <https://d2nod46fx08aeg.cloudfront.net/>
 The Astro application is built as a static site and deployed to the existing
 Amazon S3 bucket behind CloudFront. AWS CDK manages the site and infrastructure.
 CloudFront sends `/api/*` requests to an API Gateway HTTP API, which invokes
-the weather, feedback, health, or Movies Lambda handler.
+the weather, feedback, health, Movies, or reliability-metrics Lambda handler.
 
 ## Movies API setup
 
@@ -13,9 +13,12 @@ The static Movies page requests the same-origin `/api/movies` endpoint. The
 endpoint calls TMDB from a Lambda function; the browser never receives the
 TMDB access token. Before deploying the Movies feature, create an AWS Secrets
 Manager secret named `personal-site/tmdb-api-read-access-token` containing the
-TMDB API Read Access Token. The Movies Lambda receives permission to read only
-that secret. Do not put the token in Astro variables, source files, workflow
-variables, query strings, or logs.
+TMDB API Read Access Token. When using the Secrets Manager key/value editor,
+use `token` as the key and the TMDB API Read Access Token as its value. The
+Movies Lambda extracts that field before sending the bearer token to TMDB. A
+plaintext secret value is also supported. The Movies Lambda receives
+permission to read only that secret. Do not put the token in Astro variables,
+source files, workflow variables, query strings, or logs.
 
 Local development may use `TMDB_API_READ_ACCESS_TOKEN` in the developer's
 environment. Do not commit a local environment file containing the token.
