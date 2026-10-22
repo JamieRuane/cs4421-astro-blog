@@ -6,16 +6,21 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - feature/week7-container-cicd
+      - main
+      - feature/astro-ssr
     paths:
       - 'Dockerfile'
       - '.dockerignore'
       - 'package.json'
       - 'package-lock.json'
+      - 'astro.config.mjs'
       - 'src/**'
       - 'backend/**'
+      - 'scripts/**'
+      - 'security-policy.json'
       - 'cdk/lib/week7-container-stack.ts'
       - 'cdk/bin/week7-container.ts'
+      - 'docs/adr/**'
       - '.github/workflows/deploy-container.yml'
 
 permissions:
