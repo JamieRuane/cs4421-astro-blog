@@ -52,6 +52,33 @@ class TmdbHttpError extends Error {
 
 class MissingTmdbTokenError extends Error {}
 
+export function parseTmdbAccessToken(secretString: string | undefined): string {
+	const secretValue = secretString?.trim();
+	if (!secretValue) throw new MissingTmdbTokenError();
+
+	let token = secretValue;
+	if (secretValue.startsWith('{')) {
+		let secret: unknown;
+		try {
+			secret = JSON.parse(secretValue) as unknown;
+		} catch {
+			throw new MissingTmdbTokenError();
+		}
+		if (
+			typeof secret !== 'object' ||
+			secret === null ||
+			typeof (secret as Record<string, unknown>).token !== 'string'
+		) {
+			throw new MissingTmdbTokenError();
+		}
+		token = (secret as { token: string }).token.trim();
+	}
+
+	const accessToken = token.replace(/^Bearer\s+/i, '').trim();
+	if (!accessToken) throw new MissingTmdbTokenError();
+	return accessToken;
+}
+
 function parseInteger(value: string | undefined): number | undefined {
 	if (value === undefined || value.trim() === '') return undefined;
 	if (!/^\d+$/.test(value)) return Number.NaN;
@@ -141,8 +168,8 @@ function getSecretsManagerTokenProvider(): () => Promise<string> {
 	let cachedToken: { secretId: string; value: string; expiresAt: number } | undefined;
 
 	return async () => {
-		const localToken = process.env.TMDB_API_READ_ACCESS_TOKEN?.trim();
-		if (localToken) return localToken.replace(/^Bearer\s+/i, '');
+		const localToken = process.env.TMDB_API_READ_ACCESS_TOKEN;
+		if (localToken?.trim()) return parseTmdbAccessToken(localToken);
 
 		const secretId = process.env.TMDB_API_SECRET_ARN;
 		if (!secretId) throw new MissingTmdbTokenError();
@@ -152,8 +179,7 @@ function getSecretsManagerTokenProvider(): () => Promise<string> {
 		}
 
 		const result = await client.send(new GetSecretValueCommand({ SecretId: secretId }));
-		const token = result.SecretString?.trim().replace(/^Bearer\s+/i, '');
-		if (!token) throw new MissingTmdbTokenError();
+		const token = parseTmdbAccessToken(result.SecretString);
 
 		cachedToken = { secretId, value: token, expiresAt: Date.now() + 300_000 };
 		return token;

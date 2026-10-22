@@ -9,8 +9,11 @@ on:
       - feature/week7-container-cicd
     paths:
       - 'Dockerfile'
-      - 'container-server.mjs'
       - '.dockerignore'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'src/**'
+      - 'backend/**'
       - 'cdk/lib/week7-container-stack.ts'
       - 'cdk/bin/week7-container.ts'
       - '.github/workflows/deploy-container.yml'
@@ -88,28 +91,25 @@ jobs:
             --query 'services[0].{Running:runningCount,Desired:desiredCount,Status:status,TaskDefinition:taskDefinition}' \
             --output table
 
+      
       - name: Verify application health
         run: |
           set -euo pipefail
 
-          TASK_ARN=$(aws ecs list-tasks \
-            --cluster "$ECS_CLUSTER" \
-            --service-name "$ECS_SERVICE" \
-            --desired-status RUNNING \
-            --query 'taskArns[0]' \
+          ALB_DNS=$(aws cloudformation describe-stacks \
+            --stack-name Week7ContainerStack \
+            --region "$AWS_REGION" \
+            --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerDnsName'].OutputValue | [0]" \
             --output text)
 
-          TASK_IP=$(aws ecs describe-tasks \
-            --cluster "$ECS_CLUSTER" \
-            --tasks "$TASK_ARN" \
-            --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value | [0]" \
-            --output text | xargs -I {} aws ec2 describe-network-interfaces \
-              --network-interface-ids {} \
-              --query 'NetworkInterfaces[0].Association.PublicIp' \
-              --output text)
+          if [ -z "$ALB_DNS" ] || [ "$ALB_DNS" = "None" ]; then
+            echo "LoadBalancerDnsName output is missing."
+            exit 1
+          fi
 
           curl --fail --retry 10 --retry-delay 5 --retry-connrefused \
-            "http://${TASK_IP}:8080/api/health"
+            "http://${ALB_DNS}/api/health"
+
 
       - name: Collect CloudWatch logs
         if: always()

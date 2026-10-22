@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
 	createMoviesHandler,
+	parseTmdbAccessToken,
 	parseMovieQuery,
 } from '../backend/handlers/movies';
 
@@ -66,6 +67,23 @@ describe('movie query validation', () => {
 		expect(parseMovieQuery({ query: '  ' })).toEqual({
 			value: { page: 1 },
 		});
+	});
+});
+
+describe('TMDB access token parsing', () => {
+	it('extracts the token from a Secrets Manager key/value secret', () => {
+		expect(parseTmdbAccessToken('{"token":"tmdb-read-token-for-tests"}')).toBe(token);
+	});
+
+	it('continues to accept plaintext tokens, with or without a Bearer prefix', () => {
+		expect(parseTmdbAccessToken(token)).toBe(token);
+		expect(parseTmdbAccessToken(`Bearer ${token}`)).toBe(token);
+	});
+
+	it('rejects missing or invalid structured secret values', () => {
+		expect(() => parseTmdbAccessToken(undefined)).toThrow();
+		expect(() => parseTmdbAccessToken('{"other":"value"}')).toThrow();
+		expect(() => parseTmdbAccessToken('{invalid json')).toThrow();
 	});
 });
 

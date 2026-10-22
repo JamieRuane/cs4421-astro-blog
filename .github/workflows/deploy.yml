@@ -11,6 +11,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      RELIABILITY_SLO_AVAILABILITY_TARGET: ${{ vars.RELIABILITY_SLO_AVAILABILITY_TARGET || '0.999' }}
+      RELIABILITY_SLO_API_LATENCY_P95_TARGET_MS: ${{ vars.RELIABILITY_SLO_API_LATENCY_P95_TARGET_MS || '1000' }}
 
     steps:
       - name: Checkout repository
@@ -41,7 +44,10 @@ jobs:
           fi
 
       - name: Synthesize deployment stack
-        run: npx cdk synth StaticSiteStack --strict  
+        run: |
+          npx cdk synth StaticSiteStack --strict \
+            -c reliabilitySloAvailabilityTarget="$RELIABILITY_SLO_AVAILABILITY_TARGET" \
+            -c reliabilitySloApiLatencyP95TargetMs="$RELIABILITY_SLO_API_LATENCY_P95_TARGET_MS"
 
       - name: Debug GitHub OIDC context
         env:
@@ -58,7 +64,10 @@ jobs:
           aws-region: eu-west-1
 
       - name: Deploy with AWS CDK
-        run: npx cdk deploy StaticSiteStack --require-approval never
+        run: |
+          npx cdk deploy StaticSiteStack --require-approval never \
+            -c reliabilitySloAvailabilityTarget="$RELIABILITY_SLO_AVAILABILITY_TARGET" \
+            -c reliabilitySloApiLatencyP95TargetMs="$RELIABILITY_SLO_API_LATENCY_P95_TARGET_MS"
 
       - name: Get CloudFront URL
         id: cloudfront
@@ -100,6 +109,18 @@ jobs:
 
           check_json_status "$SITE_URL/health.json" "healthy"
           check_json_status "$SITE_URL/api/health" "ok"
+
+      - name: Check reliability API schema
+        env:
+          SITE_URL: ${{ steps.cloudfront.outputs.url }}
+        run: |
+          response=$(curl --silent --show-error --fail "$SITE_URL/api/reliability?hours=1")
+          schema_version=$(echo "$response" | jq -r '.schemaVersion')
+
+          if [ "$schema_version" != "1" ]; then
+            echo "Unexpected reliability API schema version: $schema_version"
+            exit 1
+          fi
 
       - name: Validate deployed security headers
         env:
