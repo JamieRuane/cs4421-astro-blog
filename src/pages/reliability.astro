@@ -653,9 +653,9 @@ import Header from '../components/Header.astro';
 			!isRecord(availability) ||
 			!isMetric(availability.value) ||
 			typeof availability.target !== 'number' ||
-			!isRecord(apiLatencyP95) ||
-			!isMetric(apiLatencyP95.value) ||
-			typeof apiLatencyP95.targetMs !== 'number' ||
+			!isRecord(p95LatencyMetric) ||
+			!isMetric(p95LatencyMetric.value) ||
+			typeof p95LatencyMetric.targetMs !== 'number' ||
 			!isRecord(errorBudget) ||
 			(errorBudget.status !== 'available' && errorBudget.status !== 'unavailable') ||
 			!isMetric(errorBudget.requestCount) ||

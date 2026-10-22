@@ -1,0 +1,5 @@
+[[allowlists]]
+description = "Ignore the CloudWatch SLI name flagged as a false positive"
+condition = "AND"
+paths = ['''src/pages/reliability\.astro''']
+regexes = ['''apiLatencyP95''']
