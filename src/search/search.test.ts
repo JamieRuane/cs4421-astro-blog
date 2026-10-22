@@ -58,5 +58,10 @@ describe('site search', () => {
 		expect(searchItems(index, 'music')[0]).toMatchObject({ title: 'Music', url: '/music/' });
 		expect(searchItems(index, 'movies')[0]).toMatchObject({ title: 'Movies', url: '/movies/' });
 		expect(searchItems(index, 'my place')[0]).toMatchObject({ title: 'My Place', url: '/about/' });
+		expect(searchItems(index, 'reliability')[0]).toMatchObject({
+			title: 'Reliability',
+			type: 'Section',
+			url: '/reliability/',
+		});
 	});
 });

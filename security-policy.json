@@ -18,9 +18,9 @@
             ],
             "script-src": [
                 "'self'",
-                "'sha256-Fbp3C2J0eHsYrZQMhr0Tg4B4o3oLYwvR4TwwatdorBI='",
+                "'sha256-1yibcij9ayoGllMqBml5LMeZYKl5Rc8P8eisRNO7Kas='",
+                "'sha256-DWZ+Ebk1PsjcrwSrugY9z7+sOuhIbKJaOZ4dW6lgwWM='",
                 "'sha256-GyGC2D09Xr7dBpbgXmgORprXHuQawT4KdVKzkxbeT78='",
-                "'sha256-LhzmIbEDrBoSP57CCu6R63gU0KZyUluKrICLjlxTxZ4='",
                 "'sha256-NCIEyGOovtgztPTinDSxNOtS1hkk8ZcALiBIJkYq0Zw='",
                 "'sha256-YjjSEHYd7nognHXttWoCXrdhovxr7/JVlYlY5pheCDQ='",
                 "'sha256-sLyN81Jti51MF2GN1BZ186C2fTt7MN5xnAjq4AUw6IE='",

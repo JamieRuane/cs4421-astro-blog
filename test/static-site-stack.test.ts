@@ -15,14 +15,15 @@ describe('StaticSiteStack', () => {
 		template.resourceCountIs('AWS::S3::Bucket', 1);
 		template.resourceCountIs('AWS::CloudFront::Distribution', 1);
 		template.resourceCountIs('AWS::ApiGatewayV2::Api', 1);
-		template.resourceCountIs('AWS::ApiGatewayV2::Route', 4);
-		template.resourceCountIs('AWS::Logs::LogGroup', 5);
+		template.resourceCountIs('AWS::ApiGatewayV2::Route', 5);
+		template.resourceCountIs('AWS::Logs::LogGroup', 6);
 		template.hasResourceProperties('AWS::Logs::LogGroup', { RetentionInDays: 7 });
 		for (const functionName of [
 			'personal-site-weather',
 			'personal-site-feedback',
 			'personal-site-health',
 			'personal-site-movies',
+			'personal-site-reliability',
 		]) {
 			template.hasResourceProperties('AWS::Lambda::Function', {
 				FunctionName: functionName,
@@ -39,6 +40,9 @@ describe('StaticSiteStack', () => {
 		template.hasResourceProperties('AWS::ApiGatewayV2::Route', { RouteKey: 'POST /api/feedback' });
 		template.hasResourceProperties('AWS::ApiGatewayV2::Route', { RouteKey: 'GET /api/health' });
 		template.hasResourceProperties('AWS::ApiGatewayV2::Route', { RouteKey: 'GET /api/movies' });
+		template.hasResourceProperties('AWS::ApiGatewayV2::Route', {
+			RouteKey: 'GET /api/reliability',
+		});
 		const policies = Object.values(template.findResources('AWS::IAM::Policy'));
 		const secretPolicy = policies.find((policy) =>
 			JSON.stringify(policy).includes('secretsmanager:GetSecretValue'),
@@ -53,6 +57,26 @@ describe('StaticSiteStack', () => {
 			'personal-site/tmdb-api-read-access-token',
 		);
 		expect(secretStatement?.Resource).not.toBe('*');
+		const reliabilityPolicy = policies
+			.flatMap((policy) => policy.Properties.PolicyDocument.Statement)
+			.find((statement: { Action: string | string[] }) =>
+				JSON.stringify(statement.Action).includes('cloudwatch:GetMetricData'),
+			);
+		expect(reliabilityPolicy).toMatchObject({
+			Action: 'cloudwatch:GetMetricData',
+			Resource: '*',
+		});
+		const reliabilityFunction = Object.values(
+			template.findResources('AWS::Lambda::Function'),
+		).find((resource) =>
+			resource.Properties.FunctionName === 'personal-site-reliability',
+		);
+		expect(reliabilityFunction?.Properties.Environment.Variables).toMatchObject({
+			API_ID: { Ref: expect.any(String) },
+			API_STAGE: '$default',
+			SLO_AVAILABILITY_TARGET: '0.999',
+			SLO_API_LATENCY_P95_TARGET_MS: '1000',
+		});
 		const buckets = template.findResources('AWS::S3::Bucket');
 		const bucket = Object.values(buckets)[0];
 		expect(bucket.DeletionPolicy).toBe('Delete');
@@ -80,4 +104,29 @@ describe('StaticSiteStack', () => {
 		expect(csp).not.toContain("'unsafe-inline'");
 		expect(csp).not.toContain('*');
 	}, 30_000);
+
+	it('supports valid configurable reliability SLO targets', () => {
+		const app = new cdk.App();
+		const stack = new StaticSiteStack(app, 'ConfiguredReliabilityStack', {
+			siteAssetPath: 'public',
+			reliabilitySloAvailabilityTarget: 0.995,
+			reliabilitySloApiLatencyP95TargetMs: 750,
+		});
+		const functions = Template.fromStack(stack).findResources('AWS::Lambda::Function');
+		const reliabilityFunction = Object.values(functions).find((resource) =>
+			resource.Properties.FunctionName === 'personal-site-reliability',
+		);
+		expect(reliabilityFunction?.Properties.Environment.Variables).toMatchObject({
+			SLO_AVAILABILITY_TARGET: '0.995',
+			SLO_API_LATENCY_P95_TARGET_MS: '750',
+		});
+	}, 30_000);
+
+	it('rejects invalid reliability SLO targets', () => {
+		const app = new cdk.App();
+		expect(() => new StaticSiteStack(app, 'InvalidReliabilityStack', {
+			siteAssetPath: 'public',
+			reliabilitySloAvailabilityTarget: 1.1,
+		})).toThrow('Reliability availability SLO');
+	});
 });
