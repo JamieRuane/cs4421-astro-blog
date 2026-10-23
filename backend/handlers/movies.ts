@@ -64,14 +64,13 @@ export function parseTmdbAccessToken(secretString: string | undefined): string {
 		} catch {
 			throw new MissingTmdbTokenError();
 		}
-		if (
-			typeof secret !== 'object' ||
-			secret === null ||
-			typeof (secret as Record<string, unknown>).token !== 'string'
-		) {
+		if (typeof secret !== 'object' || secret === null) {
 			throw new MissingTmdbTokenError();
 		}
-		token = (secret as { token: string }).token.trim();
+		const values = secret as Record<string, unknown>;
+		const tokenValue = values.token ?? values.access_token ?? values.TMDB_API_READ_ACCESS_TOKEN;
+		if (typeof tokenValue !== 'string') throw new MissingTmdbTokenError();
+		token = tokenValue.trim();
 	}
 
 	const accessToken = token.replace(/^Bearer\s+/i, '').trim();
@@ -196,7 +195,7 @@ export function createMoviesHandler({
 		const response = await fetcher(url, {
 			headers: {
 				accept: 'application/json',
-				authorization: `Bearer ${token}`,
+				authorization: 'Bearer ' + token,
 			},
 			signal: AbortSignal.timeout(8_000),
 		});

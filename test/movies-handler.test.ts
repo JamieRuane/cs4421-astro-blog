@@ -74,11 +74,17 @@ describe('TMDB access token parsing', () => {
 	it('extracts the token from a Secrets Manager key/value secret', () => {
 		expect(parseTmdbAccessToken('{"token":"tmdb-read-token-for-tests"}')).toBe(token);
 	});
-
 	it('continues to accept plaintext tokens, with or without a Bearer prefix', () => {
 		expect(parseTmdbAccessToken(token)).toBe(token);
-		expect(parseTmdbAccessToken(`Bearer ${token}`)).toBe(token);
+		expect(parseTmdbAccessToken('Bearer ' + token)).toBe(token);
 	});
+
+	it.each(['access_token', 'TMDB_API_READ_ACCESS_TOKEN'])(
+		'extracts the token from a Secrets Manager %s secret',
+		(key) => {
+			expect(parseTmdbAccessToken(JSON.stringify({ [key]: token }))).toBe(token);
+		},
+	);
 
 	it('rejects missing or invalid structured secret values', () => {
 		expect(() => parseTmdbAccessToken(undefined)).toThrow();
@@ -121,7 +127,7 @@ describe('movie Lambda handler', () => {
 			String(input).includes('/movie/popular'),
 		);
 		expect(movieRequest).toBeDefined();
-		expect(new Headers(movieRequest?.[1]?.headers).get('authorization')).toBe(`Bearer ${token}`);
+		expect(new Headers(movieRequest?.[1]?.headers).get('authorization')).toBe('Bearer ' + token);
 	});
 
 	it('searches by title, applies year and genre filters, and caches genres', async () => {

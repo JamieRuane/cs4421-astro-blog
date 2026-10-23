@@ -84,6 +84,7 @@ describe('StaticSiteStack', () => {
 
 		const distribution = template.findResources('AWS::CloudFront::Distribution');
 		const distributionConfig = Object.values(distribution)[0].Properties.DistributionConfig;
+		expect(distributionConfig.DefaultRootObject).toBe('index.html');
 		expect(distributionConfig.DefaultCacheBehavior.TargetOriginId).toBeDefined();
 		expect(distributionConfig.DefaultCacheBehavior.ViewerProtocolPolicy).toBe('redirect-to-https');
 		expect(distributionConfig.CacheBehaviors).toHaveLength(1);
