@@ -162,15 +162,17 @@ function mapMovie(value: unknown): Movie | undefined {
 	};
 }
 
-function getSecretsManagerTokenProvider(): () => Promise<string> {
+export function createTmdbTokenProvider(
+	environment: Record<string, string | undefined> = process.env,
+): () => Promise<string> {
 	const client = new SecretsManagerClient({});
 	let cachedToken: { secretId: string; value: string; expiresAt: number } | undefined;
 
 	return async () => {
-		const localToken = process.env.TMDB_API_READ_ACCESS_TOKEN;
+		const localToken = environment.TMDB_API_READ_ACCESS_TOKEN;
 		if (localToken?.trim()) return parseTmdbAccessToken(localToken);
 
-		const secretId = process.env.TMDB_API_SECRET_ARN;
+		const secretId = environment.TMDB_API_SECRET_ARN;
 		if (!secretId) throw new MissingTmdbTokenError();
 
 		if (cachedToken?.secretId === secretId && cachedToken.expiresAt > Date.now()) {
@@ -187,7 +189,7 @@ function getSecretsManagerTokenProvider(): () => Promise<string> {
 
 export function createMoviesHandler({
 	fetcher = fetch,
-	getAccessToken = getSecretsManagerTokenProvider(),
+	getAccessToken = createTmdbTokenProvider(),
 }: HandlerDependencies = {}): (event: HttpApiEvent) => Promise<HttpApiResponse> {
 	let cachedGenres: { genres: Genre[]; expiresAt: number } | undefined;
 

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
 	createMoviesHandler,
+	createTmdbTokenProvider,
 	parseTmdbAccessToken,
 	parseMovieQuery,
 } from '../backend/handlers/movies';
@@ -90,6 +91,20 @@ describe('TMDB access token parsing', () => {
 		expect(() => parseTmdbAccessToken(undefined)).toThrow();
 		expect(() => parseTmdbAccessToken('{"other":"value"}')).toThrow();
 		expect(() => parseTmdbAccessToken('{invalid json')).toThrow();
+	});
+
+	it('reads a valid local token from the configured environment', async () => {
+		const getAccessToken = createTmdbTokenProvider({
+			TMDB_API_READ_ACCESS_TOKEN: `Bearer ${token}`,
+		});
+
+		await expect(getAccessToken()).resolves.toBe(token);
+	});
+
+	it('rejects when neither local nor AWS credentials are configured', async () => {
+		const getAccessToken = createTmdbTokenProvider({});
+
+		await expect(getAccessToken()).rejects.toThrow();
 	});
 });
 

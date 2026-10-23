@@ -13,7 +13,7 @@
     "check": "astro check",
     "astro": "astro",
     "test:unit": "vitest run",
-    "security:validate": "node scripts/validate-security-policy.mjs",
+    "security:validate": "node scripts/security-validate.mjs",
     "security:refresh-hashes": "node scripts/validate-security-policy.mjs --refresh-hashes",
     "lint": "eslint \"{src,backend,cdk,test}/**/*.{js,ts}\""
   },
