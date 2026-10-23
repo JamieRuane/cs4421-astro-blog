@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import { loadEnv } from 'vite';
 
 const handlers = {
 	'GET /api/weather': '/backend/handlers/weather.ts',
@@ -13,6 +14,7 @@ export function localApiPlugin() {
 		name: 'local-api',
 		configureServer(server) {
 			const loadedHandlers = new Map();
+			const localEnvironment = loadEnv(server.config.mode, server.config.root, '');
 
 			server.middlewares.use(async (request, response, next) => {
 				const method = request.method ?? 'GET';
@@ -33,7 +35,15 @@ export function localApiPlugin() {
 				try {
 					let handlerPromise = loadedHandlers.get(handlerPath);
 					if (!handlerPromise) {
-						handlerPromise = server.ssrLoadModule(handlerPath).then((module) => module.handler);
+						handlerPromise = server.ssrLoadModule(handlerPath).then((module) =>
+							handlerPath === '/backend/handlers/movies.ts'
+								? module.createMoviesHandler({
+									getAccessToken: module.createTmdbTokenProvider(localEnvironment),
+								})
+								: handlerPath === '/backend/handlers/reliability.ts'
+									? module.createReliabilityHandler({ environment: localEnvironment })
+								: module.handler,
+						);
 						loadedHandlers.set(handlerPath, handlerPromise);
 					}
 

@@ -102,11 +102,10 @@ type ReliabilityConfiguration = {
 type HandlerDependencies = {
 	getMetricData?: (input: GetMetricDataCommandInput) => Promise<GetMetricDataCommandOutput>;
 	now?: () => Date;
+	environment?: Record<string, string | undefined>;
 };
 
 class IncompleteMetricResultsError extends Error {}
-
-const cloudWatch = new CloudWatchClient({});
 
 function unavailable(reason: string): MetricValue {
 	return { value: null, timestamp: null, status: 'unavailable', reason };
@@ -125,14 +124,16 @@ function parseHours(value: string | undefined): number | undefined {
 		: undefined;
 }
 
-function parseConfiguration(): ReliabilityConfiguration | undefined {
-	const apiId = process.env.API_ID?.trim();
-	const stage = process.env.API_STAGE?.trim();
+function parseConfiguration(
+	environment: Record<string, string | undefined> = process.env,
+): ReliabilityConfiguration | undefined {
+	const apiId = environment.API_ID?.trim();
+	const stage = environment.API_STAGE?.trim();
 	const availabilityTarget = Number(
-		process.env.SLO_AVAILABILITY_TARGET ?? defaultAvailabilityTarget,
+		environment.SLO_AVAILABILITY_TARGET ?? defaultAvailabilityTarget,
 	);
 	const apiLatencyP95TargetMs = Number(
-		process.env.SLO_API_LATENCY_P95_TARGET_MS ?? defaultApiLatencyP95TargetMs,
+		environment.SLO_API_LATENCY_P95_TARGET_MS ?? defaultApiLatencyP95TargetMs,
 	);
 
 	if (
@@ -447,6 +448,10 @@ function hasIncompleteResults(results: MetricDataResult[]): boolean {
 }
 
 export function createReliabilityHandler(dependencies: HandlerDependencies = {}) {
+	const environment = dependencies.environment ?? process.env;
+	const cloudWatch = new CloudWatchClient({
+		region: environment.AWS_REGION ?? 'eu-west-1',
+	});
 	const getMetricData = dependencies.getMetricData ?? ((input) =>
 		cloudWatch.send(new GetMetricDataCommand(input)));
 	const now = dependencies.now ?? (() => new Date());
@@ -468,7 +473,7 @@ export function createReliabilityHandler(dependencies: HandlerDependencies = {})
 			}, 400);
 		}
 
-		const configuration = parseConfiguration();
+		const configuration = parseConfiguration(environment);
 		if (!configuration) {
 			return jsonResponse({
 				status: 'error',
