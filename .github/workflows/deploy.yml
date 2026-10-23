@@ -29,7 +29,13 @@ jobs:
         run: npm ci
 
       - name: Build Astro site
+        env:
+          ASTRO_OUTPUT: static
         run: npm run build
+
+      - name: Verify static site artifact
+        shell: bash
+        run: test -f dist/client/index.html
 
       - name: Validate security policy
         run: npm run security:validate

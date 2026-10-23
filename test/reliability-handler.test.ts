@@ -95,6 +95,43 @@ afterEach(() => {
 });
 
 describe('reliability query validation', () => {
+	it('uses explicitly supplied environment values for local configuration', async () => {
+		const getMetricData = vi.fn(async (input) => metricResponse(input));
+		const handler = createReliabilityHandler({
+			environment: {
+				API_ID: 'api-from-dotenv',
+				API_STAGE: '$default',
+			},
+			getMetricData,
+		});
+
+		const response = await handler({});
+
+		expect(response.statusCode).toBe(200);
+		expect(bodyOf(response).objectives).toEqual({
+			availability: 0.999,
+			apiLatencyP95Ms: 1_000,
+		});
+		expect(getMetricData).toHaveBeenCalled();
+	});
+
+	it('reports missing local API configuration without querying CloudWatch', async () => {
+		const getMetricData = vi.fn();
+		const handler = createReliabilityHandler({
+			environment: {},
+			getMetricData,
+		});
+
+		const response = await handler({});
+
+		expect(response.statusCode).toBe(503);
+		expect(JSON.parse(response.body)).toEqual({
+			status: 'error',
+			error: 'Reliability metrics are not configured.',
+		});
+		expect(getMetricData).not.toHaveBeenCalled();
+	});
+
 	it.each(['0', '721', '1.5', '24hours', ''])('rejects invalid hours value %j', async (hours) => {
 		const getMetricData = vi.fn();
 		const response = await createReliabilityHandler({ getMetricData })({

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
 	createMoviesHandler,
+	createTmdbTokenProvider,
 	parseTmdbAccessToken,
 	parseMovieQuery,
 } from '../backend/handlers/movies';
@@ -74,16 +75,36 @@ describe('TMDB access token parsing', () => {
 	it('extracts the token from a Secrets Manager key/value secret', () => {
 		expect(parseTmdbAccessToken('{"token":"tmdb-read-token-for-tests"}')).toBe(token);
 	});
-
 	it('continues to accept plaintext tokens, with or without a Bearer prefix', () => {
 		expect(parseTmdbAccessToken(token)).toBe(token);
-		expect(parseTmdbAccessToken(`Bearer ${token}`)).toBe(token);
+		expect(parseTmdbAccessToken('Bearer ' + token)).toBe(token);
 	});
+
+	it.each(['access_token', 'TMDB_API_READ_ACCESS_TOKEN'])(
+		'extracts the token from a Secrets Manager %s secret',
+		(key) => {
+			expect(parseTmdbAccessToken(JSON.stringify({ [key]: token }))).toBe(token);
+		},
+	);
 
 	it('rejects missing or invalid structured secret values', () => {
 		expect(() => parseTmdbAccessToken(undefined)).toThrow();
 		expect(() => parseTmdbAccessToken('{"other":"value"}')).toThrow();
 		expect(() => parseTmdbAccessToken('{invalid json')).toThrow();
+	});
+
+	it('reads a valid local token from the configured environment', async () => {
+		const getAccessToken = createTmdbTokenProvider({
+			TMDB_API_READ_ACCESS_TOKEN: `Bearer ${token}`,
+		});
+
+		await expect(getAccessToken()).resolves.toBe(token);
+	});
+
+	it('rejects when neither local nor AWS credentials are configured', async () => {
+		const getAccessToken = createTmdbTokenProvider({});
+
+		await expect(getAccessToken()).rejects.toThrow();
 	});
 });
 
@@ -121,7 +142,7 @@ describe('movie Lambda handler', () => {
 			String(input).includes('/movie/popular'),
 		);
 		expect(movieRequest).toBeDefined();
-		expect(new Headers(movieRequest?.[1]?.headers).get('authorization')).toBe(`Bearer ${token}`);
+		expect(new Headers(movieRequest?.[1]?.headers).get('authorization')).toBe('Bearer ' + token);
 	});
 
 	it('searches by title, applies year and genre filters, and caches genres', async () => {

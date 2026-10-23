@@ -64,14 +64,13 @@ export function parseTmdbAccessToken(secretString: string | undefined): string {
 		} catch {
 			throw new MissingTmdbTokenError();
 		}
-		if (
-			typeof secret !== 'object' ||
-			secret === null ||
-			typeof (secret as Record<string, unknown>).token !== 'string'
-		) {
+		if (typeof secret !== 'object' || secret === null) {
 			throw new MissingTmdbTokenError();
 		}
-		token = (secret as { token: string }).token.trim();
+		const values = secret as Record<string, unknown>;
+		const tokenValue = values.token ?? values.access_token ?? values.TMDB_API_READ_ACCESS_TOKEN;
+		if (typeof tokenValue !== 'string') throw new MissingTmdbTokenError();
+		token = tokenValue.trim();
 	}
 
 	const accessToken = token.replace(/^Bearer\s+/i, '').trim();
@@ -163,15 +162,17 @@ function mapMovie(value: unknown): Movie | undefined {
 	};
 }
 
-function getSecretsManagerTokenProvider(): () => Promise<string> {
+export function createTmdbTokenProvider(
+	environment: Record<string, string | undefined> = process.env,
+): () => Promise<string> {
 	const client = new SecretsManagerClient({});
 	let cachedToken: { secretId: string; value: string; expiresAt: number } | undefined;
 
 	return async () => {
-		const localToken = process.env.TMDB_API_READ_ACCESS_TOKEN;
+		const localToken = environment.TMDB_API_READ_ACCESS_TOKEN;
 		if (localToken?.trim()) return parseTmdbAccessToken(localToken);
 
-		const secretId = process.env.TMDB_API_SECRET_ARN;
+		const secretId = environment.TMDB_API_SECRET_ARN;
 		if (!secretId) throw new MissingTmdbTokenError();
 
 		if (cachedToken?.secretId === secretId && cachedToken.expiresAt > Date.now()) {
@@ -188,7 +189,7 @@ function getSecretsManagerTokenProvider(): () => Promise<string> {
 
 export function createMoviesHandler({
 	fetcher = fetch,
-	getAccessToken = getSecretsManagerTokenProvider(),
+	getAccessToken = createTmdbTokenProvider(),
 }: HandlerDependencies = {}): (event: HttpApiEvent) => Promise<HttpApiResponse> {
 	let cachedGenres: { genres: Genre[]; expiresAt: number } | undefined;
 
@@ -196,7 +197,7 @@ export function createMoviesHandler({
 		const response = await fetcher(url, {
 			headers: {
 				accept: 'application/json',
-				authorization: `Bearer ${token}`,
+				authorization: 'Bearer ' + token,
 			},
 			signal: AbortSignal.timeout(8_000),
 		});

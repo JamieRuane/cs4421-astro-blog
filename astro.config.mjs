@@ -7,10 +7,12 @@ import { defineConfig, fontProviders } from 'astro/config';
 
 import { localApiPlugin } from './scripts/local-api-plugin.mjs';
 
+const output = process.env.ASTRO_OUTPUT === 'static' ? 'static' : 'server';
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://d2nod46fx08aeg.cloudfront.net/',
-  output: 'server',
+  output,
   adapter: node({
     mode: 'standalone',
   }),
