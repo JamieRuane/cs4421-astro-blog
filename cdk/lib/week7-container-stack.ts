@@ -5,12 +5,43 @@ import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as process from 'node:process';
 import { Construct } from 'constructs';
 
+export interface Week7ContainerStackProps extends cdk.StackProps {
+    reliabilityApiId: string;
+    reliabilityApiStage?: string;
+    reliabilitySloAvailabilityTarget?: number;
+    reliabilitySloApiLatencyP95TargetMs?: number;
+}
+
 export class Week7ContainerStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    constructor(scope: Construct, id: string, props: Week7ContainerStackProps) {
         super(scope, id, props);
+        const {
+            reliabilityApiId,
+            reliabilityApiStage = '$default',
+            reliabilitySloAvailabilityTarget = 0.999,
+            reliabilitySloApiLatencyP95TargetMs = 1_000,
+        } = props;
+        if (!reliabilityApiId.trim() || !reliabilityApiStage.trim()) {
+            throw new Error('Reliability API ID and stage are required for the SSR container.');
+        }
+        if (
+            !Number.isFinite(reliabilitySloAvailabilityTarget) ||
+            reliabilitySloAvailabilityTarget <= 0 ||
+            reliabilitySloAvailabilityTarget > 1
+        ) {
+            throw new Error('Reliability availability SLO must be greater than 0 and at most 1.');
+        }
+        if (
+            !Number.isFinite(reliabilitySloApiLatencyP95TargetMs) ||
+            reliabilitySloApiLatencyP95TargetMs <= 0 ||
+            reliabilitySloApiLatencyP95TargetMs > 120_000
+        ) {
+            throw new Error('Reliability API p95 latency SLO must be between 0 and 120000 ms.');
+        }
 
         const repository = ecr.Repository.fromRepositoryName(
             this,
@@ -43,6 +74,19 @@ export class Week7ContainerStack extends cdk.Stack {
                 ),
             ],
         });
+        const taskRole = new iam.Role(this, 'TaskRole', {
+            assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+        });
+        taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
+            actions: ['cloudwatch:GetMetricData'],
+            resources: ['*'],
+        }));
+        const tmdbSecret = secretsmanager.Secret.fromSecretNameV2(
+            this,
+            'TmdbApiReadAccessToken',
+            'personal-site/tmdb-api-read-access-token',
+        );
+        tmdbSecret.grantRead(taskRole);
 
         const logGroup = new logs.LogGroup(this, 'ContainerLogs', {
             logGroupName: '/ecs/week7-container-blog',
@@ -57,6 +101,7 @@ export class Week7ContainerStack extends cdk.Stack {
                 cpu: 256,
                 memoryLimitMiB: 512,
                 executionRole,
+                taskRole,
             },
         );
 
@@ -70,6 +115,14 @@ export class Week7ContainerStack extends cdk.Stack {
                 streamPrefix: 'blog',
             }),
             portMappings: [{ containerPort: 8080 }],
+            environment: {
+                AWS_REGION: 'eu-west-1',
+                API_ID: reliabilityApiId,
+                API_STAGE: reliabilityApiStage,
+                SLO_AVAILABILITY_TARGET: String(reliabilitySloAvailabilityTarget),
+                SLO_API_LATENCY_P95_TARGET_MS: String(reliabilitySloApiLatencyP95TargetMs),
+                TMDB_API_SECRET_ARN: 'personal-site/tmdb-api-read-access-token',
+            },
             healthCheck: {
                 command: [
                     'CMD-SHELL',

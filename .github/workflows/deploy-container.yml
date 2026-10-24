@@ -32,6 +32,10 @@ env:
   ECR_REPOSITORY: my-astro-blog
   ECS_CLUSTER: week7-container-cluster
   ECS_SERVICE: week7-container-blog
+  RELIABILITY_API_ID: ${{ vars.RELIABILITY_API_ID }}
+  RELIABILITY_API_STAGE: ${{ vars.RELIABILITY_API_STAGE || '$default' }}
+  RELIABILITY_SLO_AVAILABILITY_TARGET: ${{ vars.RELIABILITY_SLO_AVAILABILITY_TARGET || '0.999' }}
+  RELIABILITY_SLO_API_LATENCY_P95_TARGET_MS: ${{ vars.RELIABILITY_SLO_API_LATENCY_P95_TARGET_MS || '1000' }}
 
 jobs:
   deploy:
@@ -75,7 +79,9 @@ jobs:
       - name: Verify CDK synthesis
         env:
           CONTAINER_IMAGE_TAG: ${{ github.sha }}
-        run: npx cdk --app "npx tsx cdk/bin/week7-container.ts" synth Week7ContainerStack
+        run: |
+          test -n "$RELIABILITY_API_ID"
+          npx cdk --app "npx tsx cdk/bin/week7-container.ts" synth Week7ContainerStack
 
       - name: Deploy coursework infrastructure
         env:
