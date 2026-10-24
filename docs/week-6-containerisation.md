@@ -16,3 +16,16 @@ The task definition supplies only the stable identifier
 token from Secrets Manager at runtime. The token is not stored in source
 control or a plaintext task definition. The task role is granted only
 `cloudwatch:GetMetricData` and `secretsmanager:GetSecretValue`.
+
+The secret must contain either the plaintext TMDB read token or a JSON object
+with one of the supported keys: `token`, `access_token`, or
+`TMDB_API_READ_ACCESS_TOKEN`. An arbitrary generated JSON key is rejected and
+produces the intentional 503 configuration response. Correct the secret in
+Secrets Manager before deploying; do not broaden the parser to accept unknown
+keys.
+
+The GitHub OIDC role also needs the policy in
+`github-week7-cloudformation-policy.json`. It grants only
+`cloudformation:DescribeStacks` for `Week7ContainerStack`, which is required by
+the workflow's ALB output lookup. Applying that policy is an AWS IAM change
+and is intentionally not performed by this repository change.
