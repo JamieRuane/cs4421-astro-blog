@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DescribeWeek7ContainerStack",
+      "Effect": "Allow",
+      "Action": "cloudformation:DescribeStacks",
+      "Resource": "arn:aws:cloudformation:eu-west-1:423741523931:stack/Week7ContainerStack/*"
+    }
+  ]
+}

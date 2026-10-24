@@ -90,6 +90,7 @@ describe('TMDB access token parsing', () => {
 	it('rejects missing or invalid structured secret values', () => {
 		expect(() => parseTmdbAccessToken(undefined)).toThrow();
 		expect(() => parseTmdbAccessToken('{"other":"value"}')).toThrow();
+		expect(() => parseTmdbAccessToken('{"4d2fd8c3cf1129660e4db9d53dbecfa8":"token"}')).toThrow();
 		expect(() => parseTmdbAccessToken('{invalid json')).toThrow();
 	});
 
