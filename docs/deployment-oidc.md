@@ -21,8 +21,9 @@ use `token` as the key and the TMDB API Read Access Token as its value.
 `access_token` and
 `TMDB_API_READ_ACCESS_TOKEN` are also accepted for compatibility. The Movies
 Lambda extracts that field before sending the bearer token to TMDB. A
-plaintext secret value is also supported. The Movies Lambda receives
-permission to read only that secret. Do not put the token in Astro variables,
+plaintext secret value is also supported. The Movies Lambda receives permission to read only that secret and is configured
+with the stable secret name as its Secrets Manager identifier, so recreating the
+secret does not leave a stale suffixed ARN in the Lambda environment. Do not put the token in Astro variables,
 source files, workflow variables, query strings, or logs.
 
 Local development may use `TMDB_API_READ_ACCESS_TOKEN` in the developer's

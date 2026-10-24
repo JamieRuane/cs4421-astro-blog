@@ -172,7 +172,7 @@ export class StaticSiteStack extends cdk.Stack {
 			memorySize: 256,
 			logGroup: moviesLogGroup,
 			environment: {
-				TMDB_API_SECRET_ARN: tmdbToken.secretArn,
+				TMDB_API_SECRET_ARN: 'personal-site/tmdb-api-read-access-token',
 			},
 		});
 		tmdbToken.grantRead(moviesHandler);

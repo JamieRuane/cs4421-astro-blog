@@ -48,6 +48,14 @@ describe('StaticSiteStack', () => {
 			JSON.stringify(policy).includes('secretsmanager:GetSecretValue'),
 		);
 		expect(secretPolicy).toBeDefined();
+		const moviesFunction = Object.values(
+			template.findResources('AWS::Lambda::Function'),
+		).find((resource) =>
+			resource.Properties.FunctionName === 'personal-site-movies',
+		);
+		expect(moviesFunction?.Properties.Environment.Variables).toMatchObject({
+			TMDB_API_SECRET_ARN: 'personal-site/tmdb-api-read-access-token',
+		});
 		const policyDocument = secretPolicy?.Properties.PolicyDocument;
 		const secretStatement = policyDocument?.Statement.find((statement: {
 			Action: string[];
