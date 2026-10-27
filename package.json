@@ -33,7 +33,7 @@
     "esbuild": true
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
+    "@astrojs/check": "^0.9.12",
     "aws-cdk": "^2.1144.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.12.0",
