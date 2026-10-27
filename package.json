@@ -22,7 +22,7 @@
     "@astrojs/node": "^11.1.9",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
-    "@aws-sdk/client-cloudwatch": "^3.1155.0",
+    "@aws-sdk/client-cloudwatch": "^3.1156.0",
     "@aws-sdk/client-secrets-manager": "^3.1153.0",
     "astro": "^7.4.0",
     "aws-cdk-lib": "^2.273.0",
