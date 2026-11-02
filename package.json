@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
-    "aws-cdk": "^2.1144.0",
+    "aws-cdk": "^2.1146.1",
     "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
     "eslint-plugin-astro": "^3.2.1",
